@@ -626,6 +626,15 @@
         <a href="#drive" class="sidebar-link"><span class="icon">&#128190;</span> Warp Drive</a>
         <a href="#multirepo" class="sidebar-link"><span class="icon">&#127760;</span> Multi-Repo</a>
       </div>
+      <div class="sidebar-section">
+        <div class="sidebar-section-title">BYOK / BYOA</div>
+        <a href="#byok" class="sidebar-link"><span class="icon">&#128274;</span> BYOK Architecture</a>
+        <a href="#free-agents" class="sidebar-link"><span class="icon">&#127873;</span> Free Agent Alternatives</a>
+        <a href="#opencode-harness" class="sidebar-link"><span class="icon">&#128736;</span> OpenCode Harness</a>
+        <a href="#pi-harness" class="sidebar-link"><span class="icon">&#960;</span> Pi.dev Harness</a>
+        <a href="#free-models" class="sidebar-link"><span class="icon">&#128176;</span> Free Model Providers</a>
+        <a href="#integration" class="sidebar-link"><span class="icon">&#128257;</span> Warp + Own Agent</a>
+      </div>
     </nav>
 
     <!-- MAIN -->
@@ -641,6 +650,7 @@
           <span class="badge green">&#9889; Lightning Fast</span>
           <span class="badge">&#128736; Skills & Rules</span>
           <span class="badge purple">&#128190; Warp Drive</span>
+          <span class="badge green">&#128274; BYOK / BYOA</span>
         </div>
       </section>
 
@@ -1502,6 +1512,638 @@ workflow: deploy
       </section>
 
       <!-- FOOTER -->
+
+      <!-- 14. BYOK ARCHITECTURE -->
+      <section class="section" id="byok">
+        <div class="section-header">
+          <div class="section-icon">&#128274;</div>
+          <h2>BYOK Architecture (Bring Your Own Key)</h2>
+          <button class="collapse-btn" onclick="toggleSection(this)">&#9660;</button>
+        </div>
+        <div class="section-body">
+          <div class="info-box">
+            <strong>The Core Idea:</strong> Use Warp as your terminal UI (blocks, panes, themes, shortcuts) but replace Warp's agent with your own harness (OpenCode, pi.dev) and your own models. Best of both worlds &mdash; Warp's beautiful terminal + zero vendor lock-in.
+          </div>
+
+          <div class="card" style="margin-top: 16px;">
+            <h3>&#127919; Why BYOK?</h3>
+            <div class="grid-2" style="margin-top: 12px;">
+              <div>
+                <h4 style="color: var(--accent-red); margin-bottom: 8px;">&#10060; Warp Agent Lock-in</h4>
+                <ul class="checklist">
+                  <li><span class="check-icon" style="background: rgba(239,68,68,0.12); color: var(--accent-red); border-color: rgba(239,68,68,0.3);">&#10060;</span><div>Requires Warp credits / paid subscription</div></li>
+                  <li><span class="check-icon" style="background: rgba(239,68,68,0.12); color: var(--accent-red); border-color: rgba(239,68,68,0.3);">&#10060;</span><div>Limited to Warp's curated model list</div></li>
+                  <li><span class="check-icon" style="background: rgba(239,68,68,0.12); color: var(--accent-red); border-color: rgba(239,68,68,0.3);">&#10060;</span><div>Conversations stored on Warp servers</div></li>
+                  <li><span class="check-icon" style="background: rgba(239,68,68,0.12); color: var(--accent-red); border-color: rgba(239,68,68,0.3);">&#10060;</span><div>No custom agent configuration</div></li>
+                  <li><span class="check-icon" style="background: rgba(239,68,68,0.12); color: var(--accent-red); border-color: rgba(239,68,68,0.3);">&#10060;</span><div>Can't use your own API keys directly</div></li>
+                </ul>
+              </div>
+              <div>
+                <h4 style="color: var(--accent-green); margin-bottom: 8px;">&#9989; Your Own Harness</h4>
+                <ul class="checklist">
+                  <li><span class="check-icon">&#10003;</span><div>Any provider, any model, any API key</div></li>
+                  <li><span class="check-icon">&#10003;</span><div>Free tiers across multiple providers</div></li>
+                  <li><span class="check-icon">&#10003;</span><div>Full control over agent behavior</div></li>
+                  <li><span class="check-icon">&#10003;</span><div>Custom agents, skills, permissions</div></li>
+                  <li><span class="check-icon">&#10003;</span><div>Local-first, privacy-preserving</div></li>
+                </ul>
+              </div>
+            </div>
+          </div>
+
+          <div class="card" style="margin-top: 16px;">
+            <h3>&#128268; BYOK Architecture Diagram</h3>
+            <div class="code-block">+---------------------------------------------------+
+|                   WARP TERMINAL                     |
+|  +-------------+  +-------------+  +-------------+  |
+|  |   Pane 1    |  |   Pane 2    |  |   Pane 3    |  |
+|  |  (shell)    |  |  opencode   |  |   pi.dev    |  |
+|  |             |  |  (agent)    |  |  (agent)    |  |
+|  +-------------+  +-------------+  +-------------+  |
+|                                                     |
+|  Blocks  |  Split Panes  |  Themes  |  Shortcuts    |
++---------------------------+-------------------------+
+                            |
+              +-------------v-------------+
+              |    YOUR MODEL PROVIDERS   |
+              |  OpenRouter | Groq | HF   |
+              |  Gemini Free | NVIDIA | ...|
+              +---------------------------+</div>
+            <div class="info-box success"><strong>Key Insight:</strong> Warp handles the terminal experience. Your agent harness handles the AI. Each runs independently in split panes. Use Warp's block system to copy error output from Pane 1 and paste it into your agent in Pane 2.</div>
+          </div>
+
+          <div class="card" style="margin-top: 16px;">
+            <h3>&#128260; Provider Aggregation Strategy</h3>
+            <p>Route requests through multiple providers for resilience and cost optimization:</p>
+            <div class="precedence" style="margin-top: 12px;">
+              <span class="level high">OpenRouter (primary)</span>
+              <span class="arrow">&rarr;</span>
+              <span class="level mid">Groq (speed fallback)</span>
+              <span class="arrow">&rarr;</span>
+              <span class="level low">Cloudflare (free fallback)</span>
+            </div>
+            <div class="info-box" style="margin-top: 12px;"><strong>OpenRouter</strong> is the ideal primary router &mdash; it aggregates 100+ models from 20+ providers, has a free tier, and lets you set provider preferences per model.</div>
+          </div>
+        </div>
+      </section>
+
+      <!-- 15. FREE AGENT ALTERNATIVES -->
+      <section class="section" id="free-agents">
+        <div class="section-header">
+          <div class="section-icon">&#127873;</div>
+          <h2>Free Alternatives to Warp Agents</h2>
+          <button class="collapse-btn" onclick="toggleSection(this)">&#9660;</button>
+        </div>
+        <div class="section-body">
+          <div class="card">
+            <h3>&#127873; Free &amp; Open Source Agent Harnesses</h3>
+            <div class="table-wrapper">
+              <table>
+                <thead><tr><th>Agent</th><th>License</th><th>Providers</th><th>Key Strength</th><th>Best For</th></tr></thead>
+                <tbody>
+                  <tr>
+                    <td><strong>OpenCode</strong></td>
+                    <td><span class="tag green">Open Source</span></td>
+                    <td>75+ providers</td>
+                    <td>Subagents, skills, MCP, permissions</td>
+                    <td><span class="tag purple">Full-featured</span></td>
+                  </tr>
+                  <tr>
+                    <td><strong>pi.dev</strong></td>
+                    <td><span class="tag green">MIT</span></td>
+                    <td>15+ providers</td>
+                    <td>Minimal, fast, YOLO by default</td>
+                    <td><span class="tag blue">Lightweight</span></td>
+                  </tr>
+                  <tr>
+                    <td><strong>Aider</strong></td>
+                    <td><span class="tag green">Apache 2.0</span></td>
+                    <td>Any OpenAI-compatible</td>
+                    <td>Git-aware pair programming</td>
+                    <td><span class="tag yellow">Git workflows</span></td>
+                  </tr>
+                  <tr>
+                    <td><strong>Continue.dev</strong></td>
+                    <td><span class="tag green">Apache 2.0</span></td>
+                    <td>Any provider</td>
+                    <td>VS Code / JetBrains integration</td>
+                    <td><span class="tag blue">IDE users</span></td>
+                  </tr>
+                  <tr>
+                    <td><strong>Claude Code</strong></td>
+                    <td><span class="tag yellow">Proprietary</span></td>
+                    <td>Anthropic only</td>
+                    <td>Free tier, excellent code quality</td>
+                    <td><span class="tag green">Free tier</span></td>
+                  </tr>
+                  <tr>
+                    <td><strong>Codex CLI</strong></td>
+                    <td><span class="tag green">MIT</span></td>
+                    <td>OpenAI only</td>
+                    <td>Free tier, fast</td>
+                    <td><span class="tag green">Free tier</span></td>
+                  </tr>
+                  <tr>
+                    <td><strong>Llama.cpp</strong></td>
+                    <td><span class="tag green">MIT</span></td>
+                    <td>Local models</td>
+                    <td>100% local, zero API costs</td>
+                    <td><span class="tag red">Privacy</span></td>
+                  </tr>
+                  <tr>
+                    <td><strong>Ollama</strong></td>
+                    <td><span class="tag green">MIT</span></td>
+                    <td>Local + cloud</td>
+                    <td>Easy local model management</td>
+                    <td><span class="tag red">Local-first</span></td>
+                  </tr>
+                </tbody>
+              </table>
+            </div>
+          </div>
+
+          <div class="grid-2" style="margin-top: 16px;">
+            <div class="card">
+              <h3>&#128640; OpenCode vs pi.dev</h3>
+              <div class="table-wrapper">
+                <table>
+                  <thead><tr><th>Feature</th><th>OpenCode</th><th>pi.dev</th></tr></thead>
+                  <tbody>
+                    <tr><td>Provider count</td><td>75+</td><td>15+</td></tr>
+                    <tr><td>Subagents</td><td><span class="tag green">Yes</span></td><td><span class="tag red">No</span></td></tr>
+                    <tr><td>Skills</td><td><span class="tag green">Yes</span></td><td><span class="tag green">Yes</span></td></tr>
+                    <tr><td>MCP</td><td><span class="tag green">Yes</span></td><td><span class="tag green">Yes</span></td></tr>
+                    <tr><td>Permissions</td><td><span class="tag green">Fine-grained</span></td><td><span class="tag red">YOLO only</span></td></tr>
+                    <tr><td>Plan mode</td><td><span class="tag green">Built-in</span></td><td><span class="tag red">No</span></td></tr>
+                    <tr><td>Core size</td><td>~Full-featured</td><td>&lt;1000 tokens</td></tr>
+                    <tr><td>Philosophy</td><td>Power &amp; control</td><td>Minimal &amp; fast</td></tr>
+                  </tbody>
+                </table>
+              </div>
+            </div>
+            <div class="card">
+              <h3>&#128161; When to Use Which</h3>
+              <ul class="checklist">
+                <li><span class="check-icon">&#128640;</span><div><strong>OpenCode:</strong> Complex projects, multi-agent workflows, need permissions, team collaboration</div></li>
+                <li><span class="check-icon">&#960;</span><div><strong>pi.dev:</strong> Quick tasks, YOLO coding, minimal overhead, Kimi K2.6 as workhorse</div></li>
+                <li><span class="check-icon">&#128268;</span><div><strong>Both in Warp:</strong> Run OpenCode for planning + pi.dev for quick edits in separate panes</div></li>
+              </ul>
+              <div class="info-box" style="margin-top: 12px;"><strong>pi.dev's secret weapon:</strong> Kimi K2.6 is currently the #1 model by token volume on pi.dev via OpenRouter &mdash; excellent code quality at a fraction of Claude's cost.</div>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- 16. OPENCODE HARNESS -->
+      <section class="section" id="opencode-harness">
+        <div class="section-header">
+          <div class="section-icon">&#128736;</div>
+          <h2>OpenCode as Your Agent Harness</h2>
+          <button class="collapse-btn" onclick="toggleSection(this)">&#9660;</button>
+        </div>
+        <div class="section-body">
+          <div class="card">
+            <h3>&#128736; OpenCode Architecture</h3>
+            <p>OpenCode maps directly to Warp's agent concepts with more flexibility:</p>
+            <div class="grid-2" style="margin-top: 12px;">
+              <div class="drive-item"><span class="drive-icon">&#129302;</span><div><h4>Primary Agents = Warp Profiles</h4><p>Build (full access), Plan (read-only), custom agents with per-agent models</p></div></div>
+              <div class="drive-item"><span class="drive-icon">&#128268;</span><div><h4>Subagents = Specialized Tools</h4><p>General (multi-step), Explore (read-only code search), Scout (external docs)</p></div></div>
+              <div class="drive-item"><span class="drive-icon">&#128274;</span><div><h4>Permissions = Allowlist/Denylist</h4><p>Fine-grained: edit, bash, read, glob, grep, webfetch, websearch, lsp, skill</p></div></div>
+              <div class="drive-item"><span class="drive-icon">&#128736;</span><div><h4>Skills = Warp Skills</h4><p>Markdown files with YAML frontmatter, argument placeholders, project/global scope</p></div></div>
+            </div>
+          </div>
+
+          <div class="card" style="margin-top: 16px;">
+            <h3>&#128220; Agent Profiles (Warp Profile Equivalent)</h3>
+            <div class="code-block">{
+  "$schema": "https://opencode.ai/config.json",
+  "agent": {
+    "build": {
+      "mode": "primary",
+      "model": "openrouter/anthropic/claude-sonnet-4-20250514",
+      "permission": { "edit": "allow", "bash": "allow", "read": "allow" }
+    },
+    "plan": {
+      "mode": "primary",
+      "model": "openrouter/google/gemini-2.5-pro",
+      "permission": { "edit": "deny", "bash": "deny", "read": "allow" },
+      "temperature": 0.1
+    },
+    "code-reviewer": {
+      "description": "Reviews code for security, performance, maintainability",
+      "mode": "subagent",
+      "model": "openrouter/anthropic/claude-opus-4-20250514",
+      "permission": { "edit": "deny", "bash": "deny" },
+      "temperature": 0.1
+    },
+    "quick-fix": {
+      "description": "Fast fixes using cheaper models for simple tasks",
+      "mode": "subagent",
+      "model": "groq/llama-3.3-70b-versatile",
+      "permission": { "edit": "ask", "bash": "allow" },
+      "steps": 5
+    }
+  }
+}</div>
+          </div>
+
+          <div class="card" style="margin-top: 16px;">
+            <h3>&#128274; Permission System (Warp Denylist Equivalent)</h3>
+            <div class="table-wrapper">
+              <table>
+                <thead><tr><th>Permission Key</th><th>Gates</th><th>Values</th></tr></thead>
+                <tbody>
+                  <tr><td><code>read</code></td><td>File read operations</td><td><code>allow</code> | <code>ask</code> | <code>deny</code></td></tr>
+                  <tr><td><code>edit</code></td><td>write, edit, apply_patch</td><td><code>allow</code> | <code>ask</code> | <code>deny</code></td></tr>
+                  <tr><td><code>bash</code></td><td>All bash commands</td><td><code>allow</code> | <code>ask</code> | <code>deny</code> (or glob patterns)</td></tr>
+                  <tr><td><code>glob</code></td><td>File globbing</td><td><code>allow</code> | <code>ask</code> | <code>deny</code></td></tr>
+                  <tr><td><code>grep</code></td><td>Content search</td><td><code>allow</code> | <code>ask</code> | <code>deny</code></td></tr>
+                  <tr><td><code>webfetch</code></td><td>URL fetching</td><td><code>allow</code> | <code>ask</code> | <code>deny</code></td></tr>
+                  <tr><td><code>websearch</code></td><td>Web search</td><td><code>allow</code> | <code>ask</code> | <code>deny</code></td></tr>
+                  <tr><td><code>lsp</code></td><td>Language server</td><td><code>allow</code> | <code>ask</code> | <code>deny</code></td></tr>
+                  <tr><td><code>skill</code></td><td>Skill invocation</td><td><code>allow</code> | <code>ask</code> | <code>deny</code></td></tr>
+                </tbody>
+              </table>
+            </div>
+            <div class="info-box" style="margin-top: 12px;"><strong>Bash glob patterns:</strong> <code>"bash": { "*": "ask", "git status *": "allow", "grep *": "allow" }</code> &mdash; last matching rule wins.</div>
+          </div>
+
+          <div class="card" style="margin-top: 16px;">
+            <h3>&#128268; Model Routing Per Agent</h3>
+            <p>Each agent can use a different model optimized for its role:</p>
+            <div class="grid-3" style="margin-top: 12px;">
+              <div class="drive-item"><span class="drive-icon">&#128296;</span><div><h4>Build Agent</h4><p>Claude Sonnet via OpenRouter (best code quality)</p></div></div>
+              <div class="drive-item"><span class="drive-icon">&#128203;</span><div><h4>Plan Agent</h4><p>Gemini 2.5 Pro (strong reasoning, free tier)</p></div></div>
+              <div class="drive-item"><span class="drive-icon">&#128269;</span><div><h4>Explore Agent</h4><p>Llama 3.3 70B via Groq (fast, free)</p></div></div>
+              <div class="drive-item"><span class="drive-icon">&#128736;</span><div><h4>Quick-Fix Agent</h4><p>Kimi K2.6 via OpenRouter (cheap, capable)</p></div></div>
+              <div class="drive-item"><span class="drive-icon">&#128065;</span><div><h4>Review Agent</h4><p>Claude Opus (maximum analysis depth)</p></div></div>
+              <div class="drive-item"><span class="drive-icon">&#128306;</span><div><h4>Scout Agent</h4><p>GPT-4o via GitHub Copilot (free with sub)</p></div></div>
+            </div>
+          </div>
+
+          <div class="card" style="margin-top: 16px;">
+            <h3>&#128260; Key OpenCode Commands</h3>
+            <div class="table-wrapper">
+              <table>
+                <thead><tr><th>Command</th><th>Action</th></tr></thead>
+                <tbody>
+                  <tr><td><span class="slash-cmd">/connect</span></td><td>Add API keys for any provider</td></tr>
+                  <tr><td><span class="slash-cmd">/models</span></td><td>Select model for current session</td></tr>
+                  <tr><td><span class="slash-cmd">/init</span></td><td>Analyze project, create AGENTS.md</td></tr>
+                  <tr><td><span class="slash-cmd">/undo</span></td><td>Undo last agent changes</td></tr>
+                  <tr><td><span class="slash-cmd">/redo</span></td><td>Redo undone changes</td></tr>
+                  <tr><td><span class="slash-cmd">/share</span></td><td>Share conversation link</td></tr>
+                  <tr><td><span class="slash-cmd">Tab key</span></td><td>Cycle between primary agents (Build &harr; Plan)</td></tr>
+                  <tr><td><span class="slash-cmd">@agent</span></td><td>Invoke subagent by name</td></tr>
+                </tbody>
+              </table>
+            </div>
+          </div>
+
+          <div class="card" style="margin-top: 16px;">
+            <h3>&#128193; Agent File Locations</h3>
+            <div class="grid-2">
+              <div>
+                <p><strong>Global agents:</strong></p>
+                <div class="code-block">~/.config/opencode/agents/*.md</div>
+              </div>
+              <div>
+                <p><strong>Project agents:</strong></p>
+                <div class="code-block">.opencode/agents/*.md</div>
+              </div>
+            </div>
+            <div class="info-box" style="margin-top: 12px;"><strong>Markdown agent format:</strong> YAML frontmatter (description, mode, model, temperature, permission) + system prompt body. Filename becomes agent name.</div>
+          </div>
+        </div>
+      </section>
+
+      <!-- 17. PI.DEV HARNESS -->
+      <section class="section" id="pi-harness">
+        <div class="section-header">
+          <div class="section-icon">&#960;</div>
+          <h2>pi.dev as Lightweight Agent Harness</h2>
+          <button class="collapse-btn" onclick="toggleSection(this)">&#9660;</button>
+        </div>
+        <div class="section-body">
+          <div class="card">
+            <h3>&#960; What is pi.dev?</h3>
+            <p>pi.dev is a minimal, MIT-licensed terminal coding agent by Mario Zechner (badlogic). It stays small at the core (&lt;1000 tokens for system prompt + tools) and extends through TypeScript extensions, skills, prompt templates, and packages.</p>
+            <div class="info-box" style="margin-top: 12px;"><strong>Key insight:</strong> pi.dev runs in <strong>YOLO mode by default</strong> &mdash; no permission prompts, no pre-checking. Full filesystem access. Assumes you know what you're doing. This is the opposite of Warp's cautious agent.</div>
+          </div>
+
+          <div class="card" style="margin-top: 16px;">
+            <h3>&#128736; Core Tools (Only 4 Needed)</h3>
+            <div class="grid-4" style="margin-top: 12px;">
+              <div class="drive-item"><span class="drive-icon">&#128196;</span><div><h4>read</h4><p>Read file contents</p></div></div>
+              <div class="drive-item"><span class="drive-icon">&#9999;</span><div><h4>write</h4><p>Write/replace file</p></div></div>
+              <div class="drive-item"><span class="drive-icon">&#128260;</span><div><h4>edit</h4><p>Surgical text replacement</p></div></div>
+              <div class="drive-item"><span class="drive-icon">&#128187;</span><div><h4>bash</h4><p>Execute shell commands</p></div></div>
+            </div>
+            <div class="info-box" style="margin-top: 12px;"><strong>Minimalism wins:</strong> These 4 tools are all you need. Models are trained on similar tool schemas. Compare to Claude Code's 15+ tools or OpenCode's extensive tool list.</div>
+          </div>
+
+          <div class="card" style="margin-top: 16px;">
+            <h3>&#128268; pi.dev Provider Setup</h3>
+            <div class="code-block"># Install pi.dev
+curl -fsSL https://pi.dev/install.sh | sh
+# Or: npm install -g @earendil-works/pi-coding-agent
+
+# Set API key before running
+export ANTHROPIC_API_KEY=sk-ant-...
+# Or any other provider key
+export OPENROUTER_API_KEY=sk-or-...
+
+# Run in project directory
+cd /path/to/project && pi</div>
+          </div>
+
+          <div class="card" style="margin-top: 16px;">
+            <h3>&#128736; pi.dev Extensions &amp; Skills</h3>
+            <div class="table-wrapper">
+              <table>
+                <thead><tr><th>Extension</th><th>Purpose</th><th>Install</th></tr></thead>
+                <tbody>
+                  <tr><td><strong>pi-web-access</strong></td><td>Web search, URL fetch, GitHub clone, video understanding</td><td><code>pi install npm:pi-web-access</code></td></tr>
+                  <tr><td><strong>pi-generative-ui</strong></td><td>Stream interactive HTML/SVG widgets to macOS windows</td><td>GitHub extension</td></tr>
+                  <tr><td><strong>pi-gdocs</strong></td><td>Read/update Google Docs directly</td><td>GitHub extension</td></tr>
+                  <tr><td><strong>Custom skills</strong></td><td>Markdown files in <code>.agents/skills/</code> or <code>~/.agents/skills/</code></td><td>Same locations as OpenCode</td></tr>
+                </tbody>
+              </table>
+            </div>
+          </div>
+
+          <div class="card" style="margin-top: 16px;">
+            <h3>&#128161; pi.dev Power User Tips</h3>
+            <ul class="checklist">
+              <li><span class="check-icon">&#960;</span><div><strong>Kimi K2.6 is the workhorse:</strong> Currently #1 model by token volume on pi.dev via OpenRouter. Best cost/performance ratio for coding.</div></li>
+              <li><span class="check-icon">&#960;</span><div><strong>Custom providers:</strong> Add any OpenAI-compatible endpoint via config. Works with Ollama, LM Studio, Atomic Chat locally.</div></li>
+              <li><span class="check-icon">&#960;</span><div><strong>Sessions tree:</strong> Branch conversations, navigate parent/child sessions. Like git branches for conversations.</div></li>
+              <li><span class="check-icon">&#960;</span><div><strong>Compaction:</strong> Automatic context compaction when conversations get long. No manual /compact needed.</div></li>
+              <li><span class="check-icon">&#960;</span><div><strong>SDK mode:</strong> Embed pi in Node.js apps, build custom UIs, automate pipelines via JSONL event stream.</div></li>
+              <li><span class="check-icon">&#960;</span><div><strong>tmux integration:</strong> Run pi in a tmux pane alongside your shell. Perfect for Warp-like split pane workflows.</div></li>
+            </ul>
+          </div>
+        </div>
+      </section>
+
+      <!-- 18. FREE MODEL PROVIDERS -->
+      <section class="section" id="free-models">
+        <div class="section-header">
+          <div class="section-icon">&#128176;</div>
+          <h2>Free Model Provider Matrix</h2>
+          <button class="collapse-btn" onclick="toggleSection(this)">&#9660;</button>
+        </div>
+        <div class="section-body">
+          <div class="card">
+            <h3>&#128176; Free Tiers That Actually Work for Coding</h3>
+            <div class="table-wrapper">
+              <table>
+                <thead><tr><th>Provider</th><th>Free Models</th><th>Limits</th><th>Best For</th><th>Setup</th></tr></thead>
+                <tbody>
+                  <tr>
+                    <td><strong>OpenRouter</strong></td>
+                    <td>Meta Llama, Mistral, Qwen, DeepSeek (free tier models)</td>
+                    <td>Rate-limited, varies by model</td>
+                    <td><span class="tag purple">Primary router</span></td>
+                    <td><code>/connect</code> &rarr; OpenRouter</td>
+                  </tr>
+                  <tr>
+                    <td><strong>Groq</strong></td>
+                    <td>Llama 3.3 70B, Mixtral 8x7B, Qwen 2.5 Coder</td>
+                    <td>~30 RPM, 10K TPM</td>
+                    <td><span class="tag green">Speed</span></td>
+                    <td><code>/connect</code> &rarr; Groq</td>
+                  </tr>
+                  <tr>
+                    <td><strong>Google Gemini</strong></td>
+                    <td>Gemini 2.5 Pro, Gemini 2.5 Flash</td>
+                    <td>15 RPM, 1M tokens/day</td>
+                    <td><span class="tag blue">Reasoning</span></td>
+                    <td><code>/connect</code> &rarr; Google AI Studio</td>
+                  </tr>
+                  <tr>
+                    <td><strong>NVIDIA</strong></td>
+                    <td>Nemotron, Llama, Mistral (via build.nvidia.com)</td>
+                    <td>Free tier with rate limits</td>
+                    <td><span class="tag yellow">Open models</span></td>
+                    <td><code>/connect</code> &rarr; NVIDIA</td>
+                  </tr>
+                  <tr>
+                    <td><strong>Cloudflare Workers AI</strong></td>
+                    <td>10+ models (Llama, Qwen, Mistral)</td>
+                    <td>10K requests/day free</td>
+                    <td><span class="tag green">Edge/Free</span></td>
+                    <td><code>/connect</code> &rarr; Cloudflare</td>
+                  </tr>
+                  <tr>
+                    <td><strong>Hugging Face</strong></td>
+                    <td>100+ models via Inference Providers</td>
+                    <td>Rate-limited free inference</td>
+                    <td><span class="tag yellow">Experimentation</span></td>
+                    <td><code>/connect</code> &rarr; Hugging Face</td>
+                  </tr>
+                  <tr>
+                    <td><strong>DeepSeek</strong></td>
+                    <td>DeepSeek V3, V4 Pro</td>
+                    <td>Free credits on signup</td>
+                    <td><span class="tag purple">Code</span></td>
+                    <td><code>/connect</code> &rarr; DeepSeek</td>
+                  </tr>
+                  <tr>
+                    <td><strong>GitHub Copilot</strong></td>
+                    <td>GPT-4o, Claude Sonnet (with Pro+ sub)</td>
+                    <td>Included in subscription</td>
+                    <td><span class="tag blue">Existing sub</span></td>
+                    <td><code>/connect</code> &rarr; GitHub</td>
+                  </tr>
+                  <tr>
+                    <td><strong>OpenCode Go</strong></td>
+                    <td>Curated open models (Qwen 3 Coder 480B, etc.)</td>
+                    <td>Low-cost subscription</td>
+                    <td><span class="tag green">Budget</span></td>
+                    <td><code>/connect</code> &rarr; OpenCode Go</td>
+                  </tr>
+                  <tr>
+                    <td><strong>GitLab Duo</strong></td>
+                    <td>Claude Haiku/Sonnet/Opus 4.5 (Duo models)</td>
+                    <td>Requires Premium/Ultimate</td>
+                    <td><span class="tag purple">GitLab users</span></td>
+                    <td><code>/connect</code> &rarr; GitLab</td>
+                  </tr>
+                </tbody>
+              </table>
+            </div>
+          </div>
+
+          <div class="card" style="margin-top: 16px;">
+            <h3>&#128640; Recommended Free Stack</h3>
+            <div class="grid-3" style="margin-top: 12px;">
+              <div class="profile-card balanced">
+                <div class="profile-icon">&#128640;</div>
+                <h4>Primary: OpenRouter</h4>
+                <p class="profile-desc">Route to best free models. Aggregate 100+ models from 20+ providers. Free tier available.</p>
+              </div>
+              <div class="profile-card safe">
+                <div class="profile-icon">&#9889;</div>
+                <h4>Speed: Groq</h4>
+                <p class="profile-desc">Llama 3.3 70B at blazing speed. Free tier with generous limits. Perfect for explore/review agents.</p>
+              </div>
+              <div class="profile-card yolo">
+                <div class="profile-icon">&#129504;</div>
+                <h4>Reasoning: Gemini</h4>
+                <p class="profile-desc">Gemini 2.5 Pro free tier. 1M tokens/day. Best free reasoning model available. Use for planning.</p>
+              </div>
+            </div>
+            <div class="info-box success" style="margin-top: 16px;"><strong>Total cost: $0/month.</strong> This stack covers exploration (Groq), reasoning (Gemini), and general coding (OpenRouter free models). Add paid models only when you hit free tier limits or need maximum capability.</div>
+          </div>
+
+          <div class="card" style="margin-top: 16px;">
+            <h3>&#128260; Model Selection by Task (Free Stack)</h3>
+            <div class="table-wrapper">
+              <table>
+                <thead><tr><th>Task</th><th>Free Model</th><th>Provider</th><th>Upgrade Path</th></tr></thead>
+                <tbody>
+                  <tr><td>Quick questions</td><td>Llama 3.3 70B</td><td>Groq</td><td>Claude Haiku 4.5</td></tr>
+                  <tr><td>Code exploration</td><td>Qwen 2.5 Coder</td><td>Groq</td><td>Claude Sonnet 4.6</td></tr>
+                  <tr><td>Daily coding</td><td>DeepSeek V3</td><td>OpenRouter</td><td>Claude Sonnet 4.6</td></tr>
+                  <tr><td>Planning</td><td>Gemini 2.5 Pro</td><td>Google AI</td><td>Claude Opus 4.7</td></tr>
+                  <tr><td>Code review</td><td>Gemini 2.5 Flash</td><td>Google AI</td><td>Claude Opus 4.7</td></tr>
+                  <tr><td>Refactoring</td><td>Qwen 3 Coder 480B</td><td>OpenCode Go</td><td>Claude Opus 4.7</td></tr>
+                  <tr><td>Debugging</td><td>Kimi K2.6</td><td>OpenRouter</td><td>GPT-5.5 xhigh</td></tr>
+                  <tr><td>Documentation</td><td>Mistral Large</td><td>OpenRouter</td><td>Gemini 2.5 Pro</td></tr>
+                </tbody>
+              </table>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- 19. WARP + OWN AGENT INTEGRATION -->
+      <section class="section" id="integration">
+        <div class="section-header">
+          <div class="section-icon">&#128257;</div>
+          <h2>Warp Terminal + Your Own Agent (Integration)</h2>
+          <button class="collapse-btn" onclick="toggleSection(this)">&#9660;</button>
+        </div>
+        <div class="section-body">
+          <div class="info-box">
+            <strong>The Setup:</strong> Use Warp's split panes to run your shell in one pane and your agent harness (OpenCode or pi.dev) in another. Warp's block system lets you copy error output, command results, and file listings from the shell pane and use them as context in your agent pane.
+          </div>
+
+          <div class="card" style="margin-top: 16px;">
+            <h3>&#128466; Split Pane Workflow</h3>
+            <div class="code-block"># Layout: 3-pane setup in Warp
+# Pane 1 (left):   Your shell (bash/zsh)
+# Pane 2 (top-right):  OpenCode agent
+# Pane 3 (bottom-right): pi.dev agent (optional)
+
+# Create the layout:
+# 1. Open Warp, run your shell
+# 2. Ctrl+Shift+D  (split pane right)
+# 3. In right pane: cd /path/to/project && opencode
+# 4. Ctrl+Shift+E  (split bottom pane)
+# 5. In bottom pane: cd /path/to/project && pi
+
+# Now you have:
+# - Shell for running commands, seeing errors
+# - OpenCode for planning, complex tasks, code review
+# - pi.dev for quick edits, YOLO coding</div>
+          </div>
+
+          <div class="card" style="margin-top: 16px;">
+            <h3>&#128268; Block-to-Agent Context Flow</h3>
+            <ol class="step-list">
+              <li><div><strong>Run command in shell pane:</strong> <code>npm test</code> &mdash; tests fail with error output</div></li>
+              <li><div><strong>Select the error block:</strong> <kbd>Ctrl</kbd><kbd>Shift</kbd><kbd>A</kbd> to select, or navigate with <kbd>Ctrl</kbd><kbd>&uarr;</kbd></div></li>
+              <li><div><strong>Copy block output:</strong> <kbd>Ctrl</kbd><kbd>Shift</kbd><kbd>C</kbd></div></li>
+              <li><div><strong>Switch to agent pane:</strong> <kbd>Ctrl</kbd><kbd>Alt</kbd><kbd>&rarr;</kbd></div></li>
+              <li><div><strong>Paste + prompt:</strong> Paste error, add "Fix this test failure"</div></li>
+              <li><div><strong>Agent proposes fix:</strong> Review diff, apply if correct</div></li>
+              <li><div><strong>Switch back to shell:</strong> <kbd>Ctrl</kbd><kbd>Alt</kbd><kbd>&larr;</kbd>, re-run <code>npm test</code></div></li>
+              <li><div><strong>Repeat until green</strong></div></li>
+            </ol>
+          </div>
+
+          <div class="card" style="margin-top: 16px;">
+            <h3>&#128640; Power User Integration Patterns</h3>
+            <div class="grid-2">
+              <div class="pattern-card">
+                <h4>&#128296; The TDD Pane</h4>
+                <p>Left: shell running <code>npm test -- --watch</code>. Right: OpenCode in Plan mode. Write tests in shell, see failures, ask OpenCode to implement in Plan mode first, then switch to Build mode.</p>
+              </div>
+              <div class="pattern-card">
+                <h4>&#128300; Debug Split</h4>
+                <p>Top: shell with debugger/REPL. Bottom: pi.dev for YOLO fixes. Run code in top, paste stack traces into pi.dev below. Fast iteration loop.</p>
+              </div>
+              <div class="pattern-card">
+                <h4>&#128065; Review Pipeline</h4>
+                <p>Left: <code>git diff</code> output. Right: OpenCode code-reviewer subagent. Paste diff, get review. Iterate until clean. Then commit.</p>
+              </div>
+              <div class="pattern-card">
+                <h4>&#128218; Learning Mode</h4>
+                <p>Left: shell exploring codebase (<code>find</code>, <code>grep</code>, <code>tree</code>). Right: OpenCode explore subagent. Ask "explain this module" while feeding it file listings from left pane.</p>
+              </div>
+            </div>
+          </div>
+
+          <div class="card" style="margin-top: 16px;">
+            <h3>&#128274; Security: Sandboxed Agent Execution</h3>
+            <div class="info-box warning"><strong>Important:</strong> When running agents in Warp panes, they have the same filesystem access as your shell. Use OpenCode's permission system to restrict agent capabilities. pi.dev runs in YOLO mode &mdash; only use it in sandboxes or when you trust the codebase.</div>
+            <div class="grid-2" style="margin-top: 12px;">
+              <div>
+                <h4 style="color: var(--accent-green);">&#9989; Safe Practices</h4>
+                <ul class="checklist">
+                  <li><span class="check-icon">&#10003;</span><div>Use OpenCode's Plan mode for unfamiliar codebases</div></li>
+                  <li><span class="check-icon">&#10003;</span><div>Set <code>bash: "ask"</code> for dangerous commands</div></li>
+                  <li><span class="check-icon">&#10003;</span><div>Use <code>edit: "ask"</code> to review all changes</div></li>
+                  <li><span class="check-icon">&#10003;</span><div>Run pi.dev in a VM or container for untrusted repos</div></li>
+                </ul>
+              </div>
+              <div>
+                <h4 style="color: var(--accent-red);">&#10060; Risks</h4>
+                <ul class="checklist">
+                  <li><span class="check-icon" style="background: rgba(239,68,68,0.12); color: var(--accent-red); border-color: rgba(239,68,68,0.3);">&#10060;</span><div>pi.dev YOLO mode can delete files without warning</div></li>
+                  <li><span class="check-icon" style="background: rgba(239,68,68,0.12); color: var(--accent-red); border-color: rgba(239,68,68,0.3);">&#10060;</span><div>Agents inherit your shell's permissions (sudo, etc.)</div></li>
+                  <li><span class="check-icon" style="background: rgba(239,68,68,0.12); color: var(--accent-red); border-color: rgba(239,68,68,0.3);">&#10060;</span><div>API keys in environment are accessible to agents</div></li>
+                </ul>
+              </div>
+            </div>
+          </div>
+
+          <div class="card" style="margin-top: 16px;">
+            <h3>&#128176; Cost Comparison: Warp Agent vs BYOK</h3>
+            <div class="table-wrapper">
+              <table>
+                <thead><tr><th>Approach</th><th>Monthly Cost</th><th>Model Access</th><th>Lock-in</th></tr></thead>
+                <tbody>
+                  <tr><td>Warp Agent (Free)</td><td>$0</td><td>Limited models, rate-limited</td><td><span class="tag red">High</span></td></tr>
+                  <tr><td>Warp Agent (Pro)</td><td>$20-60/mo</td><td>Curated models, credits-based</td><td><span class="tag red">High</span></td></tr>
+                  <tr><td>BYOK (Free Stack)</td><td>$0</td><td>100+ free models via OpenRouter/Groq/Gemini</td><td><span class="tag green">None</span></td></tr>
+                  <tr><td>BYOK (Paid + Free)</td><td>$10-30/mo</td><td>Any model from any provider</td><td><span class="tag green">None</span></td></tr>
+                  <tr><td>BYOK (Claude Pro sub)</td><td>$20/mo</td><td>All Claude models + free providers</td><td><span class="tag green">None</span></td></tr>
+                </tbody>
+              </table>
+            </div>
+            <div class="info-box success"><strong>Bottom line:</strong> BYOK with free providers costs $0 and gives you MORE model options than Warp's paid tier. Add a Claude Pro subscription ($20/mo) and you get the best models in the world with zero lock-in.</div>
+          </div>
+
+          <div class="card" style="margin-top: 16px;">
+            <h3>&#128640; BYOK Power User Checklist</h3>
+            <ul class="checklist">
+              <li><span class="check-icon">&#10003;</span><div><strong>Install OpenCode + pi.dev:</strong> Both available via npm or install scripts. Run in Warp panes.</div></li>
+              <li><span class="check-icon">&#10003;</span><div><strong>Connect providers:</strong> Use <code>/connect</code> in OpenCode to add OpenRouter, Groq, Gemini API keys.</div></li>
+              <li><span class="check-icon">&#10003;</span><div><strong>Configure agents:</strong> Create opencode.json with Build, Plan, Review, and Quick-Fix agents.</div></li>
+              <li><span class="check-icon">&#10003;</span><div><strong>Set permissions:</strong> Use OpenCode's fine-grained permission system. Start restrictive, loosen as you trust the agent.</div></li>
+              <li><span class="check-icon">&#10003;</span><div><strong>Create skills:</strong> Build reusable skills for your common workflows (deploy, test, review, migrate).</div></li>
+              <li><span class="check-icon">&#10003;</span><div><strong>Write AGENTS.md:</strong> Project rules that both OpenCode and pi.dev will respect.</div></li>
+              <li><span class="check-icon">&#10003;</span><div><strong>Split-pane workflow:</strong> Shell + agent in Warp panes. Use blocks for context transfer.</div></li>
+              <li><span class="check-icon">&#10003;</span><div><strong>Model routing:</strong> Different agents use different models. Plan = Gemini free, Build = Claude via OpenRouter, Explore = Groq free.</div></li>
+              <li><span class="check-icon">&#10003;</span><div><strong>Monitor costs:</strong> Track API usage per provider. Free tiers are generous but have limits.</div></li>
+              <li><span class="check-icon">&#10003;</span><div><strong>Version control configs:</strong> Commit opencode.json, AGENTS.md, and skills to your repo.</div></li>
+            </ul>
+          </div>
+        </div>
+      </section>
       <footer style="text-align: center; padding: 40px 0 20px; border-top: 1px solid var(--border-primary); color: var(--text-muted); font-size: 0.8rem;">
         <p>Warp Power User Cheatsheet &bull; Agent-Driven Development</p>
         <p style="margin-top: 4px;">Built with &#128156; for terminal enthusiasts &bull; <a href="https://www.warp.dev" target="_blank">warp.dev</a></p>
