@@ -1,0 +1,1660 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Warp Power User Cheatsheet — Agent-Driven Development</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+  <style>
+    /* ===== DESIGN TOKENS ===== */
+    :root {
+      --bg-primary: #0d1117;
+      --bg-secondary: #161b22;
+      --bg-tertiary: #1c2128;
+      --bg-code: #0d1117;
+      --border-primary: #30363d;
+      --border-secondary: #21262d;
+      --accent-purple: #8b5cf6;
+      --accent-purple-light: #a78bfa;
+      --accent-purple-dark: #7c3aed;
+      --accent-blue: #3b82f6;
+      --accent-blue-light: #60a5fa;
+      --accent-cyan: #22d3ee;
+      --accent-green: #10b981;
+      --accent-yellow: #f59e0b;
+      --accent-red: #ef4444;
+      --accent-orange: #f97316;
+      --text-primary: #e6edf3;
+      --text-secondary: #8b949e;
+      --text-muted: #6e7681;
+      --font-primary: 'Inter', system-ui, -apple-system, sans-serif;
+      --font-mono: 'JetBrains Mono', 'Fira Code', monospace;
+      --shadow-sm: 0 1px 2px rgba(0,0,0,0.3);
+      --shadow-md: 0 4px 12px rgba(0,0,0,0.4);
+      --shadow-lg: 0 8px 24px rgba(0,0,0,0.5);
+      --shadow-glow: 0 0 20px rgba(139,92,246,0.15);
+      --radius-sm: 6px;
+      --radius-md: 10px;
+      --radius-lg: 16px;
+      --radius-xl: 20px;
+      --transition-fast: 150ms ease;
+      --transition-normal: 250ms ease;
+      --transition-slow: 400ms ease;
+      --sidebar-width: 260px;
+      --header-height: 64px;
+    }
+
+    /* ===== RESET & BASE ===== */
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    html { scroll-behavior: smooth; scroll-padding-top: calc(var(--header-height) + 20px); }
+    body {
+      font-family: var(--font-primary);
+      background: var(--bg-primary);
+      color: var(--text-primary);
+      line-height: 1.6;
+      -webkit-font-smoothing: antialiased;
+      -moz-osx-font-smoothing: grayscale;
+    }
+    a { color: var(--accent-purple-light); text-decoration: none; transition: color var(--transition-fast); }
+    a:hover { color: var(--accent-cyan); }
+    ::selection { background: var(--accent-purple); color: white; }
+    ::-webkit-scrollbar { width: 8px; height: 8px; }
+    ::-webkit-scrollbar-track { background: var(--bg-primary); }
+    ::-webkit-scrollbar-thumb { background: var(--border-primary); border-radius: 4px; }
+    ::-webkit-scrollbar-thumb:hover { background: var(--text-muted); }
+
+    /* ===== HEADER ===== */
+    .header {
+      position: fixed; top: 0; left: 0; right: 0; z-index: 100;
+      height: var(--header-height);
+      background: rgba(13,17,23,0.85);
+      backdrop-filter: blur(16px);
+      border-bottom: 1px solid var(--border-primary);
+      display: flex; align-items: center; justify-content: space-between;
+      padding: 0 24px;
+    }
+    .header-logo {
+      display: flex; align-items: center; gap: 12px;
+      font-weight: 800; font-size: 1.125rem;
+      background: linear-gradient(135deg, var(--accent-purple-light), var(--accent-blue));
+      -webkit-background-clip: text; -webkit-text-fill-color: transparent;
+      background-clip: text;
+    }
+    .header-logo svg { width: 28px; height: 28px; }
+    .header-search {
+      position: relative; width: 320px;
+    }
+    .header-search input {
+      width: 100%; padding: 8px 16px 8px 40px;
+      background: var(--bg-secondary); border: 1px solid var(--border-primary);
+      border-radius: var(--radius-md); color: var(--text-primary);
+      font-family: var(--font-primary); font-size: 0.875rem;
+      transition: all var(--transition-fast);
+    }
+    .header-search input:focus {
+      outline: none; border-color: var(--accent-purple);
+      box-shadow: 0 0 0 3px rgba(139,92,246,0.15);
+    }
+    .header-search input::placeholder { color: var(--text-muted); }
+    .header-search .search-icon {
+      position: absolute; left: 12px; top: 50%; transform: translateY(-50%);
+      color: var(--text-muted); pointer-events: none;
+    }
+    .header-search .search-shortcut {
+      position: absolute; right: 10px; top: 50%; transform: translateY(-50%);
+      padding: 2px 8px; background: var(--bg-tertiary); border: 1px solid var(--border-primary);
+      border-radius: 4px; font-family: var(--font-mono); font-size: 0.7rem;
+      color: var(--text-muted);
+    }
+    .header-actions { display: flex; align-items: center; gap: 12px; }
+    .btn-header {
+      padding: 6px 14px; border-radius: var(--radius-sm);
+      font-size: 0.8rem; font-weight: 500; cursor: pointer;
+      border: 1px solid var(--border-primary); background: var(--bg-secondary);
+      color: var(--text-secondary); transition: all var(--transition-fast);
+    }
+    .btn-header:hover { border-color: var(--accent-purple); color: var(--text-primary); }
+
+    /* ===== LAYOUT ===== */
+    .layout {
+      display: flex;
+      padding-top: var(--header-height);
+      min-height: 100vh;
+    }
+
+    /* ===== SIDEBAR ===== */
+    .sidebar {
+      position: fixed; top: var(--header-height); left: 0; bottom: 0;
+      width: var(--sidebar-width);
+      background: var(--bg-secondary);
+      border-right: 1px solid var(--border-primary);
+      overflow-y: auto; padding: 20px 0;
+      z-index: 50;
+      transition: transform var(--transition-normal);
+    }
+    .sidebar-toggle {
+      display: none; position: fixed; bottom: 20px; left: 20px; z-index: 60;
+      width: 44px; height: 44px; border-radius: 50%;
+      background: var(--accent-purple); border: none; color: white;
+      font-size: 1.25rem; cursor: pointer; box-shadow: var(--shadow-lg);
+      transition: transform var(--transition-fast);
+    }
+    .sidebar-toggle:hover { transform: scale(1.1); }
+    .sidebar-section { padding: 0 16px; margin-bottom: 8px; }
+    .sidebar-section-title {
+      font-size: 0.65rem; font-weight: 700; text-transform: uppercase;
+      letter-spacing: 0.08em; color: var(--text-muted);
+      padding: 8px 12px 4px;
+    }
+    .sidebar-link {
+      display: flex; align-items: center; gap: 8px;
+      padding: 7px 12px; border-radius: var(--radius-sm);
+      font-size: 0.8rem; color: var(--text-secondary);
+      transition: all var(--transition-fast);
+    }
+    .sidebar-link:hover { background: var(--bg-tertiary); color: var(--text-primary); }
+    .sidebar-link.active {
+      background: rgba(139,92,246,0.12); color: var(--accent-purple-light);
+      font-weight: 500;
+    }
+    .sidebar-link .icon { font-size: 0.9rem; width: 20px; text-align: center; }
+
+    /* ===== MAIN CONTENT ===== */
+    .main {
+      margin-left: var(--sidebar-width);
+      flex: 1; padding: 32px 40px 80px;
+      max-width: calc(100vw - var(--sidebar-width));
+    }
+
+    /* ===== HERO ===== */
+    .hero {
+      text-align: center; padding: 48px 24px 40px;
+      margin-bottom: 40px;
+      background: linear-gradient(180deg, rgba(139,92,246,0.08) 0%, transparent 100%);
+      border-radius: var(--radius-xl);
+      border: 1px solid var(--border-secondary);
+      position: relative; overflow: hidden;
+    }
+    .hero::before {
+      content: ''; position: absolute; top: -50%; left: -50%;
+      width: 200%; height: 200%;
+      background: radial-gradient(circle at 50% 50%, rgba(139,92,246,0.06) 0%, transparent 50%);
+      animation: heroGlow 8s ease-in-out infinite alternate;
+    }
+    @keyframes heroGlow {
+      0% { transform: translate(-10%, -10%); }
+      100% { transform: translate(10%, 10%); }
+    }
+    .hero > * { position: relative; z-index: 1; }
+    .hero h1 {
+      font-size: 2.5rem; font-weight: 800;
+      background: linear-gradient(135deg, var(--text-primary) 0%, var(--accent-purple-light) 50%, var(--accent-blue) 100%);
+      -webkit-background-clip: text; -webkit-text-fill-color: transparent;
+      background-clip: text; margin-bottom: 8px;
+    }
+    .hero .subtitle {
+      font-size: 1.1rem; color: var(--text-secondary); font-weight: 400;
+      margin-bottom: 24px;
+    }
+    .hero .badge-row { display: flex; justify-content: center; gap: 12px; flex-wrap: wrap; }
+    .badge {
+      display: inline-flex; align-items: center; gap: 6px;
+      padding: 5px 14px; border-radius: 20px;
+      font-size: 0.75rem; font-weight: 500;
+      border: 1px solid var(--border-primary);
+      background: var(--bg-secondary);
+      color: var(--text-secondary);
+    }
+    .badge.purple { border-color: rgba(139,92,246,0.3); color: var(--accent-purple-light); }
+    .badge.blue { border-color: rgba(59,130,246,0.3); color: var(--accent-blue-light); }
+    .badge.green { border-color: rgba(16,185,129,0.3); color: var(--accent-green); }
+
+    /* ===== SECTIONS ===== */
+    .section {
+      margin-bottom: 48px;
+      scroll-margin-top: calc(var(--header-height) + 20px);
+    }
+    .section-header {
+      display: flex; align-items: center; gap: 12px;
+      margin-bottom: 20px; padding-bottom: 12px;
+      border-bottom: 1px solid var(--border-primary);
+    }
+    .section-header .section-icon {
+      width: 40px; height: 40px; border-radius: var(--radius-md);
+      display: flex; align-items: center; justify-content: center;
+      font-size: 1.2rem;
+      background: linear-gradient(135deg, rgba(139,92,246,0.15), rgba(59,130,246,0.15));
+      border: 1px solid var(--border-primary);
+    }
+    .section-header h2 {
+      font-size: 1.5rem; font-weight: 700;
+    }
+    .section-header .collapse-btn {
+      margin-left: auto; background: none; border: none;
+      color: var(--text-muted); cursor: pointer; font-size: 1rem;
+      padding: 4px 8px; border-radius: var(--radius-sm);
+      transition: all var(--transition-fast);
+    }
+    .section-header .collapse-btn:hover { background: var(--bg-tertiary); color: var(--text-primary); }
+
+    /* ===== CARDS ===== */
+    .card {
+      background: var(--bg-secondary);
+      border: 1px solid var(--border-primary);
+      border-radius: var(--radius-lg);
+      padding: 24px;
+      margin-bottom: 16px;
+      transition: all var(--transition-normal);
+    }
+    .card:hover {
+      border-color: rgba(139,92,246,0.3);
+      box-shadow: var(--shadow-glow);
+    }
+    .card h3 {
+      font-size: 1.05rem; font-weight: 600; margin-bottom: 12px;
+      display: flex; align-items: center; gap: 8px;
+    }
+    .card p { color: var(--text-secondary); font-size: 0.9rem; margin-bottom: 12px; }
+
+    /* ===== GRID LAYOUTS ===== */
+    .grid-2 { display: grid; grid-template-columns: repeat(2, 1fr); gap: 16px; }
+    .grid-3 { display: grid; grid-template-columns: repeat(3, 1fr); gap: 16px; }
+    .grid-4 { display: grid; grid-template-columns: repeat(4, 1fr); gap: 12px; }
+
+    /* ===== PROFILE CARDS ===== */
+    .profile-card {
+      background: var(--bg-secondary);
+      border: 1px solid var(--border-primary);
+      border-radius: var(--radius-lg);
+      padding: 20px;
+      text-align: center;
+      transition: all var(--transition-normal);
+      position: relative; overflow: hidden;
+    }
+    .profile-card::before {
+      content: ''; position: absolute; top: 0; left: 0; right: 0; height: 3px;
+    }
+    .profile-card.safe::before { background: linear-gradient(90deg, var(--accent-green), var(--accent-cyan)); }
+    .profile-card.balanced::before { background: linear-gradient(90deg, var(--accent-blue), var(--accent-purple)); }
+    .profile-card.yolo::before { background: linear-gradient(90deg, var(--accent-orange), var(--accent-red)); }
+    .profile-card:hover { transform: translateY(-2px); box-shadow: var(--shadow-md); }
+    .profile-card .profile-icon { font-size: 2rem; margin-bottom: 8px; }
+    .profile-card h4 { font-size: 0.95rem; font-weight: 600; margin-bottom: 4px; }
+    .profile-card .profile-desc { font-size: 0.8rem; color: var(--text-secondary); }
+
+    /* ===== TABLES ===== */
+    .table-wrapper {
+      overflow-x: auto; border-radius: var(--radius-md);
+      border: 1px solid var(--border-primary);
+      margin-bottom: 16px;
+    }
+    table {
+      width: 100%; border-collapse: collapse;
+      font-size: 0.85rem;
+    }
+    thead th {
+      background: var(--bg-tertiary);
+      padding: 10px 14px; text-align: left;
+      font-weight: 600; font-size: 0.75rem;
+      text-transform: uppercase; letter-spacing: 0.05em;
+      color: var(--text-secondary);
+      border-bottom: 1px solid var(--border-primary);
+      white-space: nowrap;
+    }
+    tbody td {
+      padding: 10px 14px;
+      border-bottom: 1px solid var(--border-secondary);
+      vertical-align: top;
+    }
+    tbody tr:last-child td { border-bottom: none; }
+    tbody tr:nth-child(even) { background: rgba(255,255,255,0.01); }
+    tbody tr:hover { background: rgba(139,92,246,0.04); }
+
+    /* ===== CODE ===== */
+    code {
+      font-family: var(--font-mono);
+      font-size: 0.82rem;
+      background: var(--bg-code);
+      border: 1px solid var(--border-secondary);
+      padding: 2px 6px; border-radius: 4px;
+      color: var(--accent-purple-light);
+    }
+    .code-block {
+      background: var(--bg-code);
+      border: 1px solid var(--border-primary);
+      border-radius: var(--radius-md);
+      padding: 16px; margin: 12px 0;
+      overflow-x: auto;
+      font-family: var(--font-mono);
+      font-size: 0.82rem;
+      line-height: 1.7;
+      color: var(--text-secondary);
+      position: relative;
+    }
+    .code-block .copy-btn {
+      position: absolute; top: 8px; right: 8px;
+      background: var(--bg-tertiary); border: 1px solid var(--border-primary);
+      color: var(--text-muted); padding: 4px 8px; border-radius: 4px;
+      font-size: 0.7rem; cursor: pointer; transition: all var(--transition-fast);
+    }
+    .code-block .copy-btn:hover { color: var(--text-primary); border-color: var(--accent-purple); }
+
+    /* ===== SHORTCUT KEYS ===== */
+    kbd {
+      display: inline-flex; align-items: center; justify-content: center;
+      min-width: 24px; height: 22px; padding: 0 6px;
+      background: var(--bg-tertiary);
+      border: 1px solid var(--border-primary);
+      border-bottom-width: 2px;
+      border-radius: 4px;
+      font-family: var(--font-mono);
+      font-size: 0.72rem; font-weight: 500;
+      color: var(--text-primary);
+      box-shadow: 0 1px 0 var(--border-primary);
+    }
+    .shortcut {
+      display: flex; align-items: center; gap: 6px;
+      padding: 6px 0;
+    }
+    .shortcut-keys { display: flex; gap: 3px; align-items: center; }
+    .shortcut-keys span { color: var(--text-muted); font-size: 0.7rem; }
+
+    /* ===== PERMISSION BADGES ===== */
+    .perm-badge {
+      display: inline-flex; align-items: center; gap: 4px;
+      padding: 3px 10px; border-radius: 12px;
+      font-size: 0.72rem; font-weight: 500;
+    }
+    .perm-badge.allow { background: rgba(16,185,129,0.12); color: var(--accent-green); }
+    .perm-badge.ask { background: rgba(245,158,11,0.12); color: var(--accent-yellow); }
+    .perm-badge.deny { background: rgba(239,68,68,0.12); color: var(--accent-red); }
+    .perm-badge.decide { background: rgba(59,130,246,0.12); color: var(--accent-blue); }
+
+    /* ===== MODEL TABLE ===== */
+    .model-tag {
+      display: inline-flex; align-items: center; gap: 4px;
+      padding: 2px 8px; border-radius: 4px;
+      font-size: 0.75rem; font-weight: 500;
+      background: var(--bg-tertiary); border: 1px solid var(--border-secondary);
+    }
+    .model-tag.claude { border-color: rgba(139,92,246,0.3); color: var(--accent-purple-light); }
+    .model-tag.gpt { border-color: rgba(16,185,129,0.3); color: var(--accent-green); }
+    .model-tag.gemini { border-color: rgba(59,130,246,0.3); color: var(--accent-blue-light); }
+    .model-tag.open { border-color: rgba(249,115,22,0.3); color: var(--accent-orange); }
+    .model-tag.auto { border-color: rgba(107,114,128,0.3); color: var(--text-secondary); }
+
+    /* ===== CHECKLIST ===== */
+    .checklist { list-style: none; }
+    .checklist li {
+      display: flex; align-items: flex-start; gap: 10px;
+      padding: 10px 0;
+      border-bottom: 1px solid var(--border-secondary);
+      font-size: 0.9rem;
+    }
+    .checklist li:last-child { border-bottom: none; }
+    .checklist .check-icon {
+      width: 22px; height: 22px; border-radius: 50%;
+      display: flex; align-items: center; justify-content: center;
+      font-size: 0.75rem; flex-shrink: 0; margin-top: 1px;
+      background: rgba(16,185,129,0.12); color: var(--accent-green);
+      border: 1px solid rgba(16,185,129,0.3);
+    }
+
+    /* ===== STEP LIST ===== */
+    .step-list { counter-reset: step; list-style: none; }
+    .step-list li {
+      counter-increment: step;
+      display: flex; align-items: flex-start; gap: 14px;
+      padding: 14px 0;
+      border-bottom: 1px solid var(--border-secondary);
+    }
+    .step-list li:last-child { border-bottom: none; }
+    .step-list li::before {
+      content: counter(step);
+      width: 28px; height: 28px; border-radius: 50%;
+      display: flex; align-items: center; justify-content: center;
+      font-size: 0.8rem; font-weight: 700;
+      background: linear-gradient(135deg, var(--accent-purple), var(--accent-blue));
+      color: white; flex-shrink: 0;
+    }
+
+    /* ===== SLASH COMMAND ===== */
+    .slash-cmd {
+      display: inline-flex; align-items: center; gap: 6px;
+      padding: 4px 10px; border-radius: 6px;
+      font-family: var(--font-mono); font-size: 0.8rem;
+      background: var(--bg-tertiary); border: 1px solid var(--border-primary);
+      color: var(--accent-cyan);
+    }
+
+    /* ===== CONTEXT FILTER ===== */
+    .ctx-filter {
+      display: inline-flex; align-items: center; gap: 4px;
+      padding: 3px 8px; border-radius: 4px;
+      font-family: var(--font-mono); font-size: 0.78rem;
+      background: rgba(139,92,246,0.1); border: 1px solid rgba(139,92,246,0.2);
+      color: var(--accent-purple-light);
+    }
+
+    /* ===== BACK TO TOP ===== */
+    .back-to-top {
+      position: fixed; bottom: 24px; right: 24px; z-index: 60;
+      width: 44px; height: 44px; border-radius: 50%;
+      background: var(--accent-purple); border: none; color: white;
+      font-size: 1.2rem; cursor: pointer;
+      box-shadow: var(--shadow-lg);
+      opacity: 0; transform: translateY(20px);
+      transition: all var(--transition-normal);
+      pointer-events: none;
+    }
+    .back-to-top.visible { opacity: 1; transform: translateY(0); pointer-events: auto; }
+    .back-to-top:hover { background: var(--accent-purple-dark); transform: translateY(-2px); }
+
+    /* ===== SEARCH HIGHLIGHT ===== */
+    .search-highlight { background: rgba(245,158,11,0.3); border-radius: 2px; }
+    .search-no-results {
+      text-align: center; padding: 40px;
+      color: var(--text-muted); font-size: 0.95rem;
+    }
+
+    /* ===== COLLAPSED ===== */
+    .section.collapsed .section-body { display: none; }
+    .section.collapsed .collapse-btn { transform: rotate(-90deg); }
+
+    /* ===== RESPONSIVE ===== */
+    @media (max-width: 1024px) {
+      .grid-3 { grid-template-columns: repeat(2, 1fr); }
+      .grid-4 { grid-template-columns: repeat(2, 1fr); }
+    }
+    @media (max-width: 768px) {
+      .sidebar { transform: translateX(-100%); }
+      .sidebar.open { transform: translateX(0); }
+      .sidebar-toggle { display: flex; align-items: center; justify-content: center; }
+      .main { margin-left: 0; padding: 24px 16px 80px; max-width: 100vw; }
+      .header-search { width: 200px; }
+      .hero h1 { font-size: 1.75rem; }
+      .grid-2, .grid-3, .grid-4 { grid-template-columns: 1fr; }
+      .header-actions { display: none; }
+    }
+
+    /* ===== PRINT ===== */
+    @media print {
+      .header, .sidebar, .sidebar-toggle, .back-to-top, .collapse-btn, .search-shortcut { display: none !important; }
+      .main { margin-left: 0; padding: 0; max-width: 100%; }
+      .section { page-break-inside: avoid; }
+      .card:hover { box-shadow: none; border-color: var(--border-primary); }
+      body { background: white; color: black; }
+      .card, .profile-card { border: 1px solid #ccc; background: white; }
+      code, kbd { border-color: #ccc; }
+    }
+
+    /* ===== ANIMATIONS ===== */
+    @keyframes fadeInUp {
+      from { opacity: 0; transform: translateY(16px); }
+      to { opacity: 1; transform: translateY(0); }
+    }
+    .section { animation: fadeInUp 0.4s ease both; }
+    .section:nth-child(2) { animation-delay: 0.05s; }
+    .section:nth-child(3) { animation-delay: 0.1s; }
+    .section:nth-child(4) { animation-delay: 0.15s; }
+    .section:nth-child(5) { animation-delay: 0.2s; }
+
+    /* ===== PATTERN CARDS ===== */
+    .pattern-card {
+      background: var(--bg-secondary);
+      border: 1px solid var(--border-primary);
+      border-radius: var(--radius-lg);
+      padding: 20px;
+      transition: all var(--transition-normal);
+    }
+    .pattern-card:hover { border-color: rgba(139,92,246,0.3); box-shadow: var(--shadow-glow); }
+    .pattern-card h4 { font-size: 0.95rem; font-weight: 600; margin-bottom: 8px; display: flex; align-items: center; gap: 8px; }
+    .pattern-card p { font-size: 0.82rem; color: var(--text-secondary); margin-bottom: 8px; }
+
+    /* ===== DRIVEWORKS ===== */
+    .drive-item {
+      display: flex; align-items: center; gap: 12px;
+      padding: 14px; border-radius: var(--radius-md);
+      background: var(--bg-tertiary); border: 1px solid var(--border-secondary);
+      margin-bottom: 8px;
+    }
+    .drive-item .drive-icon { font-size: 1.3rem; }
+    .drive-item h4 { font-size: 0.9rem; font-weight: 600; }
+    .drive-item p { font-size: 0.8rem; color: var(--text-secondary); margin: 0; }
+
+    /* ===== TAG ===== */
+    .tag {
+      display: inline-block; padding: 2px 8px; border-radius: 4px;
+      font-size: 0.7rem; font-weight: 500;
+    }
+    .tag.purple { background: rgba(139,92,246,0.12); color: var(--accent-purple-light); }
+    .tag.blue { background: rgba(59,130,246,0.12); color: var(--accent-blue-light); }
+    .tag.green { background: rgba(16,185,129,0.12); color: var(--accent-green); }
+    .tag.yellow { background: rgba(245,158,11,0.12); color: var(--accent-yellow); }
+    .tag.red { background: rgba(239,68,68,0.12); color: var(--accent-red); }
+
+    /* ===== PRECEDENCE DIAGRAM ===== */
+    .precedence {
+      display: flex; align-items: center; gap: 8px;
+      padding: 12px 16px; border-radius: var(--radius-md);
+      background: var(--bg-tertiary); border: 1px solid var(--border-secondary);
+      margin: 8px 0;
+    }
+    .precedence .arrow { color: var(--text-muted); }
+    .precedence .level {
+      padding: 4px 12px; border-radius: 6px;
+      font-size: 0.8rem; font-weight: 500;
+    }
+    .precedence .level.high { background: rgba(16,185,129,0.15); color: var(--accent-green); }
+    .precedence .level.mid { background: rgba(245,158,11,0.15); color: var(--accent-yellow); }
+    .precedence .level.low { background: rgba(239,68,68,0.15); color: var(--accent-red); }
+
+    /* ===== INFO BOX ===== */
+    .info-box {
+      padding: 14px 18px; border-radius: var(--radius-md);
+      border-left: 3px solid var(--accent-blue);
+      background: rgba(59,130,246,0.06);
+      margin: 12px 0; font-size: 0.85rem;
+      color: var(--text-secondary);
+    }
+    .info-box strong { color: var(--accent-blue-light); }
+    .info-box.warning { border-left-color: var(--accent-yellow); background: rgba(245,158,11,0.06); }
+    .info-box.warning strong { color: var(--accent-yellow); }
+    .info-box.success { border-left-color: var(--accent-green); background: rgba(16,185,129,0.06); }
+    .info-box.success strong { color: var(--accent-green); }
+  </style>
+</head>
+<body>
+
+  <!-- HEADER -->
+  <header class="header">
+    <div class="header-logo">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+        <path d="M13 2L3 14h9l-1 8 10-12h-9l1-8z" stroke="url(#grad)" fill="none"/>
+        <defs><linearGradient id="grad" x1="0" y1="0" x2="24" y2="24"><stop offset="0%" stop-color="#a78bfa"/><stop offset="100%" stop-color="#3b82f6"/></linearGradient></defs>
+      </svg>
+      Warp Cheatsheet
+    </div>
+    <div class="header-search">
+      <span class="search-icon">&#128269;</span>
+      <input type="text" id="searchInput" placeholder="Search commands, shortcuts, concepts..." autocomplete="off">
+      <span class="search-shortcut">Ctrl+Shift+F</span>
+    </div>
+    <div class="header-actions">
+      <button class="btn-header" onclick="window.print()">&#128424; Print</button>
+      <button class="btn-header" onclick="expandAll()">&#128275; Expand All</button>
+    </div>
+  </header>
+
+  <!-- SIDEBAR TOGGLE (mobile) -->
+  <button class="sidebar-toggle" id="sidebarToggle" onclick="toggleSidebar()">&#9776;</button>
+
+  <!-- LAYOUT -->
+  <div class="layout">
+
+    <!-- SIDEBAR -->
+    <nav class="sidebar" id="sidebar">
+      <div class="sidebar-section">
+        <div class="sidebar-section-title">Getting Started</div>
+        <a href="#hero" class="sidebar-link active"><span class="icon">&#127968;</span> Home</a>
+        <a href="#agents" class="sidebar-link"><span class="icon">&#129302;</span> Agent Profiles</a>
+        <a href="#models" class="sidebar-link"><span class="icon">&#129504;</span> Model Selection</a>
+      </div>
+      <div class="sidebar-section">
+        <div class="sidebar-section-title">Accuracy & Context</div>
+        <a href="#context" class="sidebar-link"><span class="icon">&#128268;</span> Context Engineering</a>
+        <a href="#rules" class="sidebar-link"><span class="icon">&#128220;</span> Rules System</a>
+        <a href="#accuracy" class="sidebar-link"><span class="icon">&#9989;</span> Accuracy Checklist</a>
+      </div>
+      <div class="sidebar-section">
+        <div class="sidebar-section-title">Shortcuts & Commands</div>
+        <a href="#shortcuts" class="sidebar-link"><span class="icon">&#9000;</span> Linux Shortcuts</a>
+        <a href="#conversation" class="sidebar-link"><span class="icon">&#128172;</span> Conversations</a>
+        <a href="#slash" class="sidebar-link"><span class="icon">&#47;</span> Slash Commands</a>
+      </div>
+      <div class="sidebar-section">
+        <div class="sidebar-section-title">Workflows</div>
+        <a href="#planning" class="sidebar-link"><span class="icon">&#128203;</span> Planning</a>
+        <a href="#review" class="sidebar-link"><span class="icon">&#128065;</span> Code Review</a>
+        <a href="#skills" class="sidebar-link"><span class="icon">&#128736;</span> Skills</a>
+        <a href="#patterns" class="sidebar-link"><span class="icon">&#128260;</span> Efficiency Patterns</a>
+      </div>
+      <div class="sidebar-section">
+        <div class="sidebar-section-title">Advanced</div>
+        <a href="#drive" class="sidebar-link"><span class="icon">&#128190;</span> Warp Drive</a>
+        <a href="#multirepo" class="sidebar-link"><span class="icon">&#127760;</span> Multi-Repo</a>
+      </div>
+    </nav>
+
+    <!-- MAIN -->
+    <main class="main">
+
+      <!-- HERO -->
+      <section class="hero" id="hero">
+        <h1>Warp Power User Cheatsheet</h1>
+        <p class="subtitle">Agent-Driven Development &mdash; Accuracy &amp; Efficiency</p>
+        <div class="badge-row">
+          <span class="badge purple">&#129302; Agent-Driven</span>
+          <span class="badge blue">&#128268; Context-Aware</span>
+          <span class="badge green">&#9889; Lightning Fast</span>
+          <span class="badge">&#128736; Skills & Rules</span>
+          <span class="badge purple">&#128190; Warp Drive</span>
+        </div>
+      </section>
+
+      <!-- 1. AGENT PROFILES & PERMISSIONS -->
+      <section class="section" id="agents">
+        <div class="section-header">
+          <div class="section-icon">&#129302;</div>
+          <h2>Agent Profiles &amp; Permissions</h2>
+          <button class="collapse-btn" onclick="toggleSection(this)">&#9660;</button>
+        </div>
+        <div class="section-body">
+          <div class="grid-3" style="margin-bottom: 20px;">
+            <div class="profile-card safe">
+              <div class="profile-icon">&#128737;</div>
+              <h4>Safe &amp; Cautious</h4>
+              <p class="profile-desc">Read-only operations. Always asks before executing commands. Ideal for production environments.</p>
+              <div style="margin-top: 10px;"><span class="tag green">Read-Only</span> <span class="tag yellow">Always Ask</span></div>
+            </div>
+            <div class="profile-card balanced">
+              <div class="profile-icon">&#9878;</div>
+              <h4>Balanced</h4>
+              <p class="profile-desc">Agent decides which commands to run. Good balance of autonomy and safety for daily development.</p>
+              <div style="margin-top: 10px;"><span class="tag blue">Agent Decides</span> <span class="tag purple">Smart</span></div>
+            </div>
+            <div class="profile-card yolo">
+              <div class="profile-icon">&#128293;</div>
+              <h4>YOLO Mode</h4>
+              <p class="profile-desc">Full autonomy. Runs commands without asking. Maximum speed, minimum friction. Use with caution.</p>
+              <div style="margin-top: 10px;"><span class="tag red">Full Access</span> <span class="tag yellow">Always Allow</span></div>
+            </div>
+          </div>
+
+          <div class="grid-2">
+            <div class="card">
+              <h3>&#128274; Permission Levels</h3>
+              <div class="table-wrapper">
+                <table>
+                  <thead><tr><th>Level</th><th>Behavior</th><th>Badge</th></tr></thead>
+                  <tbody>
+                    <tr><td><strong>Agent decides</strong></td><td>AI evaluates risk and chooses</td><td><span class="perm-badge decide">&#129302; Agent decides</span></td></tr>
+                    <tr><td><strong>Always ask</strong></td><td>Prompts user before every command</td><td><span class="perm-badge ask">&#10067; Always ask</span></td></tr>
+                    <tr><td><strong>Always allow</strong></td><td>Runs without confirmation</td><td><span class="perm-badge allow">&#9989; Always allow</span></td></tr>
+                    <tr><td><strong>Never</strong></td><td>Command is blocked entirely</td><td><span class="perm-badge deny">&#10060; Never</span></td></tr>
+                  </tbody>
+                </table>
+              </div>
+            </div>
+            <div class="card">
+              <h3>&#9889; Run Until Completion</h3>
+              <p>Let the agent run multiple commands without pausing for approval between each one.</p>
+              <div class="shortcut"><div class="shortcut-keys"><kbd>Ctrl</kbd><span>+</span><kbd>Shift</kbd><span>+</span><kbd>I</kbd></div></div>
+              <div class="info-box warning"><strong>Warning:</strong> Only use in YOLO mode or when you trust the agent's plan. Monitor terminal output.</div>
+            </div>
+          </div>
+
+          <div class="grid-2" style="margin-top: 16px;">
+            <div class="card">
+              <h3>&#9989; Command Allowlist (Safe by Default)</h3>
+              <p>These read-only / safe commands are typically allowed:</p>
+              <div class="code-block">which, ls, grep, find, echo, cat, head, tail, wc, stat, pwd, date, uname, git status, git log, git branch, git diff</div>
+            </div>
+            <div class="card">
+              <h3>&#10060; Command Denylist (Blocked)</h3>
+              <p>These dangerous commands are blocked by default:</p>
+              <div class="code-block">wget, curl, rm, eval, mkfs, dd, shutdown, reboot</div>
+              <div class="info-box"><strong>Tip:</strong> Customize allowlist/denylist with regex patterns in agent settings for project-specific control.</div>
+            </div>
+          </div>
+
+          <div class="card" style="margin-top: 16px;">
+            <h3>&#128268; MCP Permissions</h3>
+            <p>Model Context Protocol (MCP) servers extend agent capabilities. Configure per-server permissions:</p>
+            <div class="grid-3" style="margin-top: 12px;">
+              <div class="drive-item"><span class="drive-icon">&#128268;</span><div><h4>Tool Access</h4><p>Which MCP tools the agent can call</p></div></div>
+              <div class="drive-item"><span class="drive-icon">&#128274;</span><div><h4>Resource Access</h4><p>Which resources the agent can read</p></div></div>
+              <div class="drive-item"><span class="drive-icon">&#128196;</span><div><h4>Prompt Templates</h4><p>Available prompt templates from MCP</p></div></div>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- 2. MODEL SELECTION -->
+      <section class="section" id="models">
+        <div class="section-header">
+          <div class="section-icon">&#129504;</div>
+          <h2>Model Selection Guide</h2>
+          <button class="collapse-btn" onclick="toggleSection(this)">&#9660;</button>
+        </div>
+        <div class="section-body">
+          <div class="card">
+            <h3>&#128640; Auto Models</h3>
+            <div class="table-wrapper">
+              <table>
+                <thead><tr><th>Model</th><th>Use Case</th><th>Tag</th></tr></thead>
+                <tbody>
+                  <tr><td><span class="model-tag auto">auto</span></td><td>Default balanced model for general tasks</td><td><span class="tag blue">Default</span></td></tr>
+                  <tr><td><span class="model-tag auto">auto-efficient</span></td><td>Faster, cost-optimized for simple queries</td><td><span class="tag green">Fast</span></td></tr>
+                  <tr><td><span class="model-tag auto">auto-genius</span></td><td>Most capable model for complex reasoning</td><td><span class="tag purple">Smart</span></td></tr>
+                  <tr><td><span class="model-tag auto">auto-open</span></td><td>Open-weight models for privacy-conscious work</td><td><span class="tag yellow">Open</span></td></tr>
+                </tbody>
+              </table>
+            </div>
+          </div>
+
+          <div class="card" style="margin-top: 16px;">
+            <h3>&#127759; Model Comparison by Task</h3>
+            <div class="table-wrapper">
+              <table>
+                <thead><tr><th>Task</th><th>Recommended Model</th><th>Provider</th><th>Why</th></tr></thead>
+                <tbody>
+                  <tr><td>Complex refactoring</td><td><span class="model-tag claude">Claude Opus 4.7</span></td><td>Anthropic</td><td>Deep reasoning, large context</td></tr>
+                  <tr><td>Daily coding</td><td><span class="model-tag claude">Claude Sonnet 4.6</span></td><td>Anthropic</td><td>Best speed/quality balance</td></tr>
+                  <tr><td>Quick questions</td><td><span class="model-tag claude">Claude Haiku 4.5</span></td><td>Anthropic</td><td>Fast, cost-effective</td></tr>
+                  <tr><td>Advanced reasoning</td><td><span class="model-tag gpt">GPT-5.5</span></td><td>OpenAI</td><td>State-of-the-art reasoning</td></tr>
+                  <tr><td>General development</td><td><span class="model-tag gpt">GPT-5.4</span></td><td>OpenAI</td><td>Well-rounded coding ability</td></tr>
+                  <tr><td>Code-specific tasks</td><td><span class="model-tag gpt">GPT-5.3 Codex</span></td><td>OpenAI</td><td>Specialized for code</td></tr>
+                  <tr><td>Multimodal tasks</td><td><span class="model-tag gemini">Gemini 3.1 Pro</span></td><td>Google</td><td>Strong vision + code</td></tr>
+                  <tr><td>Open-weight (privacy)</td><td><span class="model-tag open">Qwen 3.6 Plus</span></td><td>Fireworks</td><td>Strong open model</td></tr>
+                  <tr><td>Open-weight (speed)</td><td><span class="model-tag open">Kimi K2.5 / K2.6</span></td><td>Fireworks</td><td>Fast inference</td></tr>
+                  <tr><td>Open-weight (balance)</td><td><span class="model-tag open">GLM 5.1</span></td><td>Fireworks</td><td>Good all-rounder</td></tr>
+                  <tr><td>Open-weight (efficient)</td><td><span class="model-tag open">Minimax 2.7</span></td><td>Fireworks</td><td>Cost-effective</td></tr>
+                </tbody>
+              </table>
+            </div>
+          </div>
+
+          <div class="info-box" style="margin-top: 16px;">
+            <strong>Fallback System:</strong> If your primary model is unavailable or rate-limited, Warp automatically falls back to the next best available model. Configure fallback preferences in Settings &gt; AI &gt; Model Fallback.
+          </div>
+
+          <div class="card" style="margin-top: 16px;">
+            <h3>&#128260; Switch Models</h3>
+            <p>Use the slash command in any conversation:</p>
+            <div style="display: flex; gap: 8px; flex-wrap: wrap; margin-top: 8px;">
+              <span class="slash-cmd">/model</span>
+              <span class="slash-cmd">/model claude-sonnet-4-6</span>
+              <span class="slash-cmd">/model gpt-5-5</span>
+              <span class="slash-cmd">/model auto</span>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- 3. CONTEXT ENGINEERING -->
+      <section class="section" id="context">
+        <div class="section-header">
+          <div class="section-icon">&#128268;</div>
+          <h2>Context Engineering (Accuracy)</h2>
+          <button class="collapse-btn" onclick="toggleSection(this)">&#9660;</button>
+        </div>
+        <div class="section-body">
+          <div class="grid-2">
+            <div class="card">
+              <h3>&#128269; Codebase Indexing</h3>
+              <p>Warp indexes your codebase for intelligent context. Set up and verify:</p>
+              <div class="code-block"># Verify indexing status
+# Check Settings > AI > Codebase Indexing
+# Index runs automatically on file changes</div>
+              <div class="info-box"><strong>Tip:</strong> Use <code>.warpindexingignore</code> to exclude files/directories from indexing (like <code>.gitignore</code> syntax).</div>
+            </div>
+            <div class="card">
+              <h3>&#128279; Block Attachment Shortcuts</h3>
+              <p>Navigate and attach terminal blocks as context:</p>
+              <div class="shortcut"><div class="shortcut-keys"><kbd>Ctrl</kbd><span>+</span><kbd>&uarr;</kbd></div> <span>Navigate to previous block</span></div>
+              <div class="shortcut"><div class="shortcut-keys"><kbd>Ctrl</kbd><span>+</span><kbd>&darr;</kbd></div> <span>Navigate to next block</span></div>
+              <div class="shortcut"><div class="shortcut-keys"><kbd>Ctrl</kbd><span>+</span><kbd>Click</kbd></div> <span>Attach specific block to agent</span></div>
+            </div>
+          </div>
+
+          <div class="card" style="margin-top: 16px;">
+            <h3>&#128218; Context Types</h3>
+            <div class="grid-4" style="margin-top: 12px;">
+              <div class="drive-item"><span class="drive-icon">&#128187;</span><div><h4>Terminal Blocks</h4><p>Previous command output</p></div></div>
+              <div class="drive-item"><span class="drive-icon">&#128196;</span><div><h4>@file</h4><p>Attach specific files</p></div></div>
+              <div class="drive-item"><span class="drive-icon">&#128203;</span><div><h4>@plans</h4><p>Reference saved plans</p></div></div>
+              <div class="drive-item"><span class="drive-icon">&#128306;</span><div><h4>@symbol</h4><p>Reference code symbols</p></div></div>
+              <div class="drive-item"><span class="drive-icon">&#127748;</span><div><h4>Images</h4><p>Screenshots &amp; diagrams</p></div></div>
+              <div class="drive-item"><span class="drive-icon">&#127760;</span><div><h4>URLs</h4><p>Web page content</p></div></div>
+              <div class="drive-item"><span class="drive-icon">&#9999;</span><div><h4>Text Selections</h4><p>Highlighted code/text</p></div></div>
+              <div class="drive-item"><span class="drive-icon">&#128190;</span><div><h4>Warp Drive</h4><p>Notebooks &amp; workflows</p></div></div>
+            </div>
+          </div>
+
+          <div class="card" style="margin-top: 16px;">
+            <h3>&#128220; AGENTS.md Structure &amp; Best Practices</h3>
+            <p>The <code>AGENTS.md</code> file (must be ALL CAPS) provides project-specific instructions to the agent:</p>
+            <div class="code-block"># AGENTS.md
+
+## Project Overview
+Brief description of the project and its purpose.
+
+## Architecture
+Key architectural decisions and patterns.
+
+## Coding Standards
+- Language conventions
+- Testing requirements
+- Code style guidelines
+
+## Commands
+Common commands for building, testing, deploying.
+
+## Important Notes
+Any gotchas, known issues, or special considerations.</div>
+            <div class="info-box"><strong>Subdirectory Rules:</strong> Place <code>AGENTS.md</code> in subdirectories for directory-specific instructions. Subdirectory rules take precedence over root-level rules.</div>
+          </div>
+
+          <div class="card" style="margin-top: 16px;">
+            <h3>&#127760; Global Rules</h3>
+            <p>Set up global rules that apply across all projects:</p>
+            <div class="code-block"># Location: ~/.warp/AGENTS.md (or ~/.agents/AGENTS.md)
+# These rules apply to ALL projects unless overridden
+# Use for personal coding preferences, common patterns, etc.</div>
+            <div class="info-box success"><strong>Best Practice:</strong> Use global rules for personal preferences (language, formatting style) and project rules for project-specific architecture and commands.</div>
+          </div>
+        </div>
+      </section>
+
+      <!-- 4. ESSENTIAL SHORTCUTS -->
+      <section class="section" id="shortcuts">
+        <div class="section-header">
+          <div class="section-icon">&#9000;</div>
+          <h2>Essential Linux Shortcuts</h2>
+          <button class="collapse-btn" onclick="toggleSection(this)">&#9660;</button>
+        </div>
+        <div class="section-body">
+
+          <!-- Warp Essentials -->
+          <div class="card">
+            <h3>&#9889; Warp Essentials</h3>
+            <div class="table-wrapper">
+              <table>
+                <thead><tr><th>Shortcut</th><th>Action</th></tr></thead>
+                <tbody>
+                  <tr><td><div class="shortcut-keys"><kbd>Ctrl</kbd><span>+</span><kbd>Shift</kbd><span>+</span><kbd>D</kbd></div></td><td>Split pane vertically</td></tr>
+                  <tr><td><div class="shortcut-keys"><kbd>Ctrl</kbd><span>+</span><kbd>Shift</kbd><span>+</span><kbd>E</kbd></div></td><td>Split pane horizontally</td></tr>
+                  <tr><td><div class="shortcut-keys"><kbd>Ctrl</kbd><span>+</span><kbd>R</kbd></div></td><td>Reverse search history</td></tr>
+                  <tr><td><div class="shortcut-keys"><kbd>Ctrl</kbd><span>+</span><kbd>`</kbd></div></td><td>Toggle Warp AI panel</td></tr>
+                  <tr><td><div class="shortcut-keys"><kbd>Ctrl</kbd><span>+</span><kbd>Shift</kbd><span>+</span><kbd>L</kbd></div></td><td>Clear terminal screen</td></tr>
+                  <tr><td><div class="shortcut-keys"><kbd>Ctrl</kbd><span>+</span><kbd>Shift</kbd><span>+</span><kbd>\</kbd></div></td><td>Open Warp Drive</td></tr>
+                  <tr><td><div class="shortcut-keys"><kbd>Ctrl</kbd><span>+</span><kbd>,</kbd></div></td><td>Open Settings</td></tr>
+                  <tr><td><div class="shortcut-keys"><kbd>Ctrl</kbd><span>+</span><kbd>Shift</kbd><span>+</span><kbd>P</kbd></div></td><td>Open Command Palette</td></tr>
+                  <tr><td><div class="shortcut-keys"><kbd>Ctrl</kbd><span>+</span><kbd>Shift</kbd><span>+</span><kbd>T</kbd></div></td><td>New tab</td></tr>
+                </tbody>
+              </table>
+            </div>
+          </div>
+
+          <!-- Blocks Navigation -->
+          <div class="card" style="margin-top: 16px;">
+            <h3>&#128203; Blocks Navigation</h3>
+            <div class="table-wrapper">
+              <table>
+                <thead><tr><th>Shortcut</th><th>Action</th></tr></thead>
+                <tbody>
+                  <tr><td><div class="shortcut-keys"><kbd>Ctrl</kbd><span>+</span><kbd>&uarr;</kbd></div></td><td>Navigate to previous block</td></tr>
+                  <tr><td><div class="shortcut-keys"><kbd>Ctrl</kbd><span>+</span><kbd>&darr;</kbd></div></td><td>Navigate to next block</td></tr>
+                  <tr><td><div class="shortcut-keys"><kbd>Ctrl</kbd><span>+</span><kbd>Shift</kbd><span>+</span><kbd>&uarr;</kbd></div></td><td>Select previous block</td></tr>
+                  <tr><td><div class="shortcut-keys"><kbd>Ctrl</kbd><span>+</span><kbd>Shift</kbd><span>+</span><kbd>&darr;</kbd></div></td><td>Select next block</td></tr>
+                  <tr><td><div class="shortcut-keys"><kbd>Ctrl</kbd><span>+</span><kbd>Shift</kbd><span>+</span><kbd>A</kbd></div></td><td>Select all blocks</td></tr>
+                  <tr><td><div class="shortcut-keys"><kbd>Ctrl</kbd><span>+</span><kbd>Shift</kbd><span>+</span><kbd>K</kbd></div></td><td>Delete selected block(s)</td></tr>
+                  <tr><td><div class="shortcut-keys"><kbd>Ctrl</kbd><span>+</span><kbd>Shift</kbd><span>+</span><kbd>B</kbd></div></td><td>Toggle block border visibility</td></tr>
+                  <tr><td><div class="shortcut-keys"><kbd>Ctrl</kbd><span>+</span><kbd>Shift</kbd><span>+</span><kbd>S</kbd></div></td><td>Save block output to file</td></tr>
+                  <tr><td><div class="shortcut-keys"><kbd>Ctrl</kbd><span>+</span><kbd>Shift</kbd><span>+</span><kbd>I</kbd></div></td><td>Run until completion</td></tr>
+                  <tr><td><div class="shortcut-keys"><kbd>Ctrl</kbd><span>+</span><kbd>Shift</kbd><span>+</span><kbd>C</kbd></div></td><td>Copy block content</td></tr>
+                  <tr><td><div class="shortcut-keys"><kbd>Ctrl</kbd><span>+</span><kbd>Shift</kbd><span>+</span><kbd>Alt</kbd><span>+</span><kbd>C</kbd></div></td><td>Copy block as formatted code</td></tr>
+                </tbody>
+              </table>
+            </div>
+          </div>
+
+          <!-- Scrolling -->
+          <div class="card" style="margin-top: 16px;">
+            <h3>&#128202; Scrolling</h3>
+            <div class="table-wrapper">
+              <table>
+                <thead><tr><th>Shortcut</th><th>Action</th></tr></thead>
+                <tbody>
+                  <tr><td><kbd>Page Up</kbd></td><td>Scroll up one page</td></tr>
+                  <tr><td><kbd>Page Down</kbd></td><td>Scroll down one page</td></tr>
+                  <tr><td><kbd>Home</kbd></td><td>Scroll to top</td></tr>
+                  <tr><td><kbd>End</kbd></td><td>Scroll to bottom</td></tr>
+                </tbody>
+              </table>
+            </div>
+          </div>
+
+          <!-- Panes -->
+          <div class="card" style="margin-top: 16px;">
+            <h3>&#128466; Panes</h3>
+            <div class="table-wrapper">
+              <table>
+                <thead><tr><th>Shortcut</th><th>Action</th></tr></thead>
+                <tbody>
+                  <tr><td><div class="shortcut-keys"><kbd>Ctrl</kbd><span>+</span><kbd>Alt</kbd><span>+</span><kbd>&larr;</kbd></div></td><td>Focus left pane</td></tr>
+                  <tr><td><div class="shortcut-keys"><kbd>Ctrl</kbd><span>+</span><kbd>Alt</kbd><span>+</span><kbd>&rarr;</kbd></div></td><td>Focus right pane</td></tr>
+                  <tr><td><div class="shortcut-keys"><kbd>Ctrl</kbd><span>+</span><kbd>Alt</kbd><span>+</span><kbd>&uarr;</kbd></div></td><td>Focus upper pane</td></tr>
+                  <tr><td><div class="shortcut-keys"><kbd>Ctrl</kbd><span>+</span><kbd>Alt</kbd><span>+</span><kbd>&darr;</kbd></div></td><td>Focus lower pane</td></tr>
+                  <tr><td><div class="shortcut-keys"><kbd>Ctrl</kbd><span>+</span><kbd>Shift</kbd><span>+</span><kbd>[</kbd></div></td><td>Resize pane smaller</td></tr>
+                  <tr><td><div class="shortcut-keys"><kbd>Ctrl</kbd><span>+</span><kbd>Shift</kbd><span>+</span><kbd>]</kbd></div></td><td>Resize pane larger</td></tr>
+                  <tr><td><div class="shortcut-keys"><kbd>Ctrl</kbd><span>+</span><kbd>Shift</kbd><span>+</span><kbd>Enter</kbd></div></td><td>Start agent conversation</td></tr>
+                </tbody>
+              </table>
+            </div>
+          </div>
+
+          <!-- Tabs -->
+          <div class="card" style="margin-top: 16px;">
+            <h3>&#128204; Tabs</h3>
+            <div class="table-wrapper">
+              <table>
+                <thead><tr><th>Shortcut</th><th>Action</th></tr></thead>
+                <tbody>
+                  <tr><td><div class="shortcut-keys"><kbd>Ctrl</kbd><span>+</span><kbd>1-9</kbd></div></td><td>Switch to tab 1-9</td></tr>
+                  <tr><td><div class="shortcut-keys"><kbd>Ctrl</kbd><span>+</span><kbd>PageUp</kbd></div></td><td>Switch to previous tab</td></tr>
+                  <tr><td><div class="shortcut-keys"><kbd>Ctrl</kbd><span>+</span><kbd>PageDown</kbd></div></td><td>Switch to next tab</td></tr>
+                  <tr><td><div class="shortcut-keys"><kbd>Ctrl</kbd><span>+</span><kbd>Shift</kbd><span>+</span><kbd>&larr;</kbd></div></td><td>Move tab left</td></tr>
+                  <tr><td><div class="shortcut-keys"><kbd>Ctrl</kbd><span>+</span><kbd>Shift</kbd><span>+</span><kbd>&rarr;</kbd></div></td><td>Move tab right</td></tr>
+                  <tr><td><div class="shortcut-keys"><kbd>Ctrl</kbd><span>+</span><kbd>Alt</kbd><span>+</span><kbd>T</kbd></div></td><td>New tab</td></tr>
+                </tbody>
+              </table>
+            </div>
+          </div>
+
+          <!-- Input Editor -->
+          <div class="card" style="margin-top: 16px;">
+            <h3>&#9999; Input Editor</h3>
+            <div class="table-wrapper">
+              <table>
+                <thead><tr><th>Shortcut</th><th>Action</th></tr></thead>
+                <tbody>
+                  <tr><td><div class="shortcut-keys"><kbd>Ctrl</kbd><span>+</span><kbd>Z</kbd></div></td><td>Undo</td></tr>
+                  <tr><td><div class="shortcut-keys"><kbd>Ctrl</kbd><span>+</span><kbd>Shift</kbd><span>+</span><kbd>Z</kbd></div></td><td>Redo</td></tr>
+                  <tr><td><div class="shortcut-keys"><kbd>Ctrl</kbd><span>+</span><kbd>J</kbd></div></td><td>Accept AI suggestion</td></tr>
+                  <tr><td><div class="shortcut-keys"><kbd>Ctrl</kbd><span>+</span><kbd>G</kbd></div></td><td>Dismiss AI suggestion</td></tr>
+                  <tr><td><div class="shortcut-keys"><kbd>Ctrl</kbd><span>+</span><kbd>Shift</kbd><span>+</span><kbd>&darr;</kbd></div></td><td>Accept word from suggestion</td></tr>
+                  <tr><td><div class="shortcut-keys"><kbd>Ctrl</kbd><span>+</span><kbd>Shift</kbd><span>+</span><kbd>&uarr;</kbd></div></td><td>Dismiss word from suggestion</td></tr>
+                  <tr><td><div class="shortcut-keys"><kbd>Ctrl</kbd><span>+</span><kbd>Backspace</kbd></div></td><td>Delete word backward</td></tr>
+                  <tr><td><div class="shortcut-keys"><kbd>Ctrl</kbd><span>+</span><kbd>Delete</kbd></div></td><td>Delete word forward</td></tr>
+                  <tr><td><div class="shortcut-keys"><kbd>Ctrl</kbd><span>+</span><kbd>&larr;</kbd></div></td><td>Move cursor word left</td></tr>
+                  <tr><td><div class="shortcut-keys"><kbd>Ctrl</kbd><span>+</span><kbd>&rarr;</kbd></div></td><td>Move cursor word right</td></tr>
+                  <tr><td><div class="shortcut-keys"><kbd>Ctrl</kbd><span>+</span><kbd>A</kbd></div></td><td>Move to beginning of line</td></tr>
+                  <tr><td><div class="shortcut-keys"><kbd>Ctrl</kbd><span>+</span><kbd>E</kbd></div></td><td>Move to end of line</td></tr>
+                  <tr><td><div class="shortcut-keys"><kbd>Ctrl</kbd><span>+</span><kbd>K</kbd></div></td><td>Delete from cursor to end</td></tr>
+                  <tr><td><div class="shortcut-keys"><kbd>Ctrl</kbd><span>+</span><kbd>W</kbd></div></td><td>Delete word backward</td></tr>
+                  <tr><td><div class="shortcut-keys"><kbd>Ctrl</kbd><span>+</span><kbd>U</kbd></div></td><td>Delete from cursor to start</td></tr>
+                  <tr><td><div class="shortcut-keys"><kbd>Ctrl</kbd><span>+</span><kbd>L</kbd></div></td><td>Clear screen</td></tr>
+                </tbody>
+              </table>
+            </div>
+          </div>
+
+          <!-- Fundamentals -->
+          <div class="card" style="margin-top: 16px;">
+            <h3>&#127918; Fundamentals</h3>
+            <div class="table-wrapper">
+              <table>
+                <thead><tr><th>Shortcut</th><th>Action</th></tr></thead>
+                <tbody>
+                  <tr><td><div class="shortcut-keys"><kbd>Ctrl</kbd><span>+</span><kbd>Shift</kbd><span>+</span><kbd>C</kbd></div></td><td>Copy selected text</td></tr>
+                  <tr><td><div class="shortcut-keys"><kbd>Ctrl</kbd><span>+</span><kbd>Shift</kbd><span>+</span><kbd>V</kbd></div></td><td>Paste from clipboard</td></tr>
+                  <tr><td><div class="shortcut-keys"><kbd>Ctrl</kbd><span>+</span><kbd>Shift</kbd><span>+</span><kbd>F</kbd></div></td><td>Find in terminal</td></tr>
+                  <tr><td><div class="shortcut-keys"><kbd>Ctrl</kbd><span>+</span><kbd>-</kbd></div></td><td>Decrease font size</td></tr>
+                  <tr><td><div class="shortcut-keys"><kbd>Ctrl</kbd><span>+</span><kbd>=</kbd></div></td><td>Increase font size</td></tr>
+                  <tr><td><div class="shortcut-keys"><kbd>Ctrl</kbd><span>+</span><kbd>0</kbd></div></td><td>Reset font size</td></tr>
+                </tbody>
+              </table>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- 5. AGENT CONVERSATION MANAGEMENT -->
+      <section class="section" id="conversation">
+        <div class="section-header">
+          <div class="section-icon">&#128172;</div>
+          <h2>Agent Conversation Management</h2>
+          <button class="collapse-btn" onclick="toggleSection(this)">&#9660;</button>
+        </div>
+        <div class="section-body">
+          <div class="grid-2">
+            <div class="card">
+              <h3>&#128640; Starting Conversations</h3>
+              <ol class="step-list">
+                <li><div><strong>Agent Panel:</strong> <div class="shortcut-keys"><kbd>Ctrl</kbd><span>+</span><kbd>Shift</kbd><span>+</span><kbd>Enter</kbd></div></div></li>
+                <li><div><strong>Slash Command:</strong> <span class="slash-cmd">/agent</span> in any input</div></li>
+                <li><div><strong>New Conversation:</strong> <span class="slash-cmd">/new</span> to start fresh</div></li>
+                <li><div><strong>Auto-Detect:</strong> Type naturally &mdash; Warp detects agent-intent and offers quicksend</div></li>
+              </ol>
+            </div>
+            <div class="card">
+              <h3>&#9729; Cloud Agents</h3>
+              <p>Run agents in the cloud for heavy tasks that don't block your terminal:</p>
+              <div class="shortcut"><div class="shortcut-keys"><kbd>Ctrl</kbd><span>+</span><kbd>Alt</kbd><span>+</span><kbd>Enter</kbd></div> <span>Launch cloud agent</span></div>
+              <div class="info-box"><strong>Use when:</strong> Long-running tasks, heavy computation, or when you want to keep your terminal free for other work.</div>
+            </div>
+          </div>
+
+          <div class="card" style="margin-top: 16px;">
+            <h3>&#128256; Conversation Forking</h3>
+            <p>Branch conversations to explore different approaches without losing context:</p>
+            <div style="display: flex; gap: 8px; flex-wrap: wrap; margin-top: 8px;">
+              <span class="slash-cmd">/fork</span>
+              <span class="slash-cmd">/fork-and-compact</span>
+              <span class="slash-cmd">/fork from [message]</span>
+            </div>
+            <div class="info-box" style="margin-top: 12px;"><strong>/fork-and-compact</strong> reduces context window size by summarizing earlier messages &mdash; useful for long conversations approaching context limits.</div>
+          </div>
+
+          <div class="card" style="margin-top: 16px;">
+            <h3>&#128269; Context Filters (Command Palette)</h3>
+            <p>Filter what the agent sees using context prefixes in the Command Palette (<kbd>Ctrl</kbd><kbd>Shift</kbd><kbd>P</kbd>):</p>
+            <div class="grid-4" style="margin-top: 12px;">
+              <div><span class="ctx-filter">w:</span> <span style="font-size:0.78rem; color: var(--text-secondary);">Warp Drive items</span></div>
+              <div><span class="ctx-filter">p:</span> <span style="font-size:0.78rem; color: var(--text-secondary);">Plans</span></div>
+              <div><span class="ctx-filter">n:</span> <span style="font-size:0.78rem; color: var(--text-secondary);">Notebooks</span></div>
+              <div><span class="ctx-filter">files:</span> <span style="font-size:0.78rem; color: var(--text-secondary);">File attachments</span></div>
+              <div><span class="ctx-filter">drive:</span> <span style="font-size:0.78rem; color: var(--text-secondary);">Drive content</span></div>
+              <div><span class="ctx-filter">actions:</span> <span style="font-size:0.78rem; color: var(--text-secondary);">Recent actions</span></div>
+              <div><span class="ctx-filter">sessions:</span> <span style="font-size:0.78rem; color: var(--text-secondary);">Past sessions</span></div>
+              <div><span class="ctx-filter">launch_configs:</span> <span style="font-size:0.78rem; color: var(--text-secondary);">Launch configs</span></div>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- SLASH COMMANDS -->
+      <section class="section" id="slash">
+        <div class="section-header">
+          <div class="section-icon">&#47;</div>
+          <h2>Slash Commands Reference</h2>
+          <button class="collapse-btn" onclick="toggleSection(this)">&#9660;</button>
+        </div>
+        <div class="section-body">
+          <div class="card">
+            <div class="table-wrapper">
+              <table>
+                <thead><tr><th>Command</th><th>Description</th><th>Category</th></tr></thead>
+                <tbody>
+                  <tr><td><span class="slash-cmd">/agent</span></td><td>Start an agent conversation</td><td><span class="tag purple">Agent</span></td></tr>
+                  <tr><td><span class="slash-cmd">/new</span></td><td>Start a new conversation</td><td><span class="tag purple">Agent</span></td></tr>
+                  <tr><td><span class="slash-cmd">/plan</span></td><td>Create and manage execution plans</td><td><span class="tag blue">Planning</span></td></tr>
+                  <tr><td><span class="slash-cmd">/compact</span></td><td>Compact conversation context</td><td><span class="tag purple">Agent</span></td></tr>
+                  <tr><td><span class="slash-cmd">/fork</span></td><td>Fork current conversation</td><td><span class="tag purple">Agent</span></td></tr>
+                  <tr><td><span class="slash-cmd">/fork-and-compact</span></td><td>Fork and summarize context</td><td><span class="tag purple">Agent</span></td></tr>
+                  <tr><td><span class="slash-cmd">/fork from</span></td><td>Fork from a specific message</td><td><span class="tag purple">Agent</span></td></tr>
+                  <tr><td><span class="slash-cmd">/model</span></td><td>Switch the AI model</td><td><span class="tag green">Model</span></td></tr>
+                  <tr><td><span class="slash-cmd">/init</span></td><td>Initialize project rules setup</td><td><span class="tag yellow">Rules</span></td></tr>
+                  <tr><td><span class="slash-cmd">/open-skill</span></td><td>Open skill editor</td><td><span class="tag yellow">Skills</span></td></tr>
+                  <tr><td><span class="slash-cmd">/add-rule</span></td><td>Add a new project rule</td><td><span class="tag yellow">Rules</span></td></tr>
+                  <tr><td><span class="slash-cmd">/open-project-rules</span></td><td>Open project rules directory</td><td><span class="tag yellow">Rules</span></td></tr>
+                </tbody>
+              </table>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- 6. PLANNING & EXECUTION -->
+      <section class="section" id="planning">
+        <div class="section-header">
+          <div class="section-icon">&#128203;</div>
+          <h2>Planning &amp; Execution</h2>
+          <button class="collapse-btn" onclick="toggleSection(this)">&#9660;</button>
+        </div>
+        <div class="section-body">
+          <div class="card">
+            <h3>&#128203; /plan Workflow</h3>
+            <ol class="step-list">
+              <li><div><strong>Create:</strong> Use <span class="slash-cmd">/plan</span> or describe your goal. The agent generates a structured plan with steps.</div></li>
+              <li><div><strong>Review:</strong> Examine the plan in the plan panel. Each step shows status, dependencies, and estimated effort.</div></li>
+              <li><div><strong>Edit:</strong> Modify steps, reorder, add/remove tasks before execution.</div></li>
+              <li><div><strong>Execute:</strong> Agent works through steps sequentially, marking each complete.</div></li>
+              <li><div><strong>Monitor:</strong> Watch real-time progress. Pause, skip, or modify steps mid-execution.</div></li>
+            </ol>
+          </div>
+
+          <div class="grid-2" style="margin-top: 16px;">
+            <div class="card">
+              <h3>&#128190; Version History</h3>
+              <p>Plans maintain version history. Revert to previous versions or compare changes between iterations.</p>
+              <div class="info-box"><strong>Access:</strong> Plan panel &gt; History tab &gt; Select version to restore.</div>
+            </div>
+            <div class="card">
+              <h3>&#128260; Plan Shortcuts</h3>
+              <div class="shortcut"><div class="shortcut-keys"><kbd>Ctrl</kbd><span>+</span><kbd>Alt</kbd><span>+</span><kbd>P</kbd></div> <span>Toggle plan panel</span></div>
+              <div class="info-box" style="margin-top: 8px;"><strong>Mid-run updates:</strong> Plans can be updated during execution. The agent adapts to changes without restarting.</div>
+            </div>
+          </div>
+
+          <div class="card" style="margin-top: 16px;">
+            <h3>&#128257; Cross-Conversation Plan Reuse</h3>
+            <p>Reference plans from other conversations using <code>@plans</code> context attachment:</p>
+            <div class="code-block"># In any conversation, attach a previous plan:
+@plans [plan name or description]
+
+# The agent loads the plan context and can:
+# - Continue from where it left off
+# - Adapt the plan to the current project
+# - Compare with existing plans</div>
+          </div>
+        </div>
+      </section>
+
+      <!-- 7. INTERACTIVE CODE REVIEW -->
+      <section class="section" id="review">
+        <div class="section-header">
+          <div class="section-icon">&#128065;</div>
+          <h2>Interactive Code Review</h2>
+          <button class="collapse-btn" onclick="toggleSection(this)">&#9660;</button>
+        </div>
+        <div class="section-body">
+          <div class="card">
+            <h3>&#128065; Code Review Panel</h3>
+            <p>Open the interactive code review panel to leave inline comments on diffs:</p>
+            <div class="shortcut"><div class="shortcut-keys"><kbd>Ctrl</kbd><span>+</span><kbd>Shift</kbd><span>+</span><kbd>+</kbd></div> <span>Open code review panel</span></div>
+
+            <div class="grid-3" style="margin-top: 16px;">
+              <div class="pattern-card">
+                <h4>&#128221; Inline Comments</h4>
+                <p>Click on any line in the diff to leave a comment. Comments appear inline, PR-style.</p>
+              </div>
+              <div class="pattern-card">
+                <h4>&#128230; Batch Submit</h4>
+                <p>Write multiple comments and submit them all at once. No need to send one at a time.</p>
+              </div>
+              <div class="pattern-card">
+                <h4>&#128260; Feedback Loop</h4>
+                <p>PR-style review cycle. Agent addresses comments, you review again. Iterate until satisfied.</p>
+              </div>
+            </div>
+
+            <div class="info-box" style="margin-top: 16px;"><strong>Works with:</strong> Warp agent and third-party CLI agents. Any agent that produces diffs can be reviewed interactively.</div>
+          </div>
+        </div>
+      </section>
+
+      <!-- 8. SKILLS SYSTEM -->
+      <section class="section" id="skills">
+        <div class="section-header">
+          <div class="section-icon">&#128736;</div>
+          <h2>Skills System</h2>
+          <button class="collapse-btn" onclick="toggleSection(this)">&#9660;</button>
+        </div>
+        <div class="section-body">
+          <div class="card">
+            <h3>&#128220; Skill File Format</h3>
+            <p>Skills are markdown files with YAML frontmatter:</p>
+            <div class="code-block">---
+name: my-skill
+description: What this skill does
+version: 1.0.0
+---
+
+# My Skill
+
+## Instructions
+Step-by-step instructions for the agent...
+
+## Examples
+Example usage and expected outputs...</div>
+          </div>
+
+          <div class="grid-2" style="margin-top: 16px;">
+            <div class="card">
+              <h3>&#128193; Project Skills Locations</h3>
+              <p>Skills scoped to a specific project:</p>
+              <div class="code-block">.agents/skills/
+.warp/skills/
+.claude/skills/
+.cursor/skills/
+.gemini/skills/</div>
+            </div>
+            <div class="card">
+              <h3>&#127760; Global Skills Locations</h3>
+              <p>Skills available across all projects:</p>
+              <div class="code-block">~/.agents/skills/
+~/.warp/skills/
+~/.claude/skills/
+~/.cursor/skills/</div>
+            </div>
+          </div>
+
+          <div class="card" style="margin-top: 16px;">
+            <h3>&#128172; Argument Syntax</h3>
+            <div class="table-wrapper">
+              <table>
+                <thead><tr><th>Syntax</th><th>Description</th><th>Example</th></tr></thead>
+                <tbody>
+                  <tr><td><code>$ARGUMENTS</code></td><td>All arguments as a single string</td><td><code>use skill $ARGUMENTS</code></td></tr>
+                  <tr><td><code>$ARGUMENTS[N]</code></td><td>Nth argument (0-indexed)</td><td><code>$ARGUMENTS[0]</code> = first arg</td></tr>
+                  <tr><td><code>$N</code></td><td>Shorthand for $ARGUMENTS[N]</td><td><code>$0</code>, <code>$1</code>, <code>$2</code></td></tr>
+                  <tr><td><code>$0</code></td><td>First argument</td><td>Primary input parameter</td></tr>
+                </tbody>
+              </table>
+            </div>
+          </div>
+
+          <div class="card" style="margin-top: 16px;">
+            <h3>&#128640; Invocation Methods</h3>
+            <div class="grid-2">
+              <div>
+                <p><strong>Natural Language:</strong> Just describe what you want in plain English. Warp matches your intent to available skills.</p>
+                <div class="code-block">"Create a new React component with props"</div>
+              </div>
+              <div>
+                <p><strong>Explicit Invocation:</strong> Use the slash command to call a specific skill:</p>
+                <div class="code-block">/my-skill [arguments]</div>
+              </div>
+            </div>
+          </div>
+
+          <div class="card" style="margin-top: 16px;">
+            <h3>&#128736; Creating Skills (4-Step Process)</h3>
+            <ol class="step-list">
+              <li><div><strong>Define:</strong> Create a markdown file with YAML frontmatter (name, description, version).</div></li>
+              <li><div><strong>Instruct:</strong> Write clear, step-by-step instructions for the agent to follow.</div></li>
+              <li><div><strong>Place:</strong> Save in the appropriate skills directory (project or global).</div></li>
+              <li><div><strong>Test:</strong> Invoke the skill and verify the agent follows instructions correctly.</div></li>
+            </ol>
+            <div class="info-box" style="margin-top: 12px;"><strong>Pre-built Skills:</strong> Browse community skills at <a href="https://github.com/warpdotdev/oz-skills" target="_blank">warpdotdev/oz-skills</a> on GitHub.</div>
+          </div>
+        </div>
+      </section>
+
+      <!-- 9. RULES SYSTEM -->
+      <section class="section" id="rules">
+        <div class="section-header">
+          <div class="section-icon">&#128220;</div>
+          <h2>Rules System</h2>
+          <button class="collapse-btn" onclick="toggleSection(this)">&#9660;</button>
+        </div>
+        <div class="section-body">
+          <div class="grid-2">
+            <div class="card">
+              <h3>&#127760; Global Rules</h3>
+              <p>Apply to <strong>all projects</strong>. Set personal coding standards and preferences.</p>
+              <div class="code-block"># Locations:
+~/.warp/AGENTS.md
+~/.agents/AGENTS.md</div>
+            </div>
+            <div class="card">
+              <h3>&#128193; Project Rules</h3>
+              <p>Apply to a <strong>specific project</strong>. Define architecture, commands, and conventions.</p>
+              <div class="code-block"># Location (project root):
+AGENTS.md  # Must be ALL CAPS</div>
+            </div>
+          </div>
+
+          <div class="card" style="margin-top: 16px;">
+            <h3>&#128200; Precedence Order</h3>
+            <div class="precedence">
+              <span class="level high">Subdirectory AGENTS.md</span>
+              <span class="arrow">&rarr;</span>
+              <span class="level mid">Root AGENTS.md</span>
+              <span class="arrow">&rarr;</span>
+              <span class="level low">Global AGENTS.md</span>
+            </div>
+            <div class="info-box"><strong>Highest priority wins:</strong> More specific rules override general ones. Subdirectory rules take precedence over root, which takes precedence over global.</div>
+          </div>
+
+          <div class="card" style="margin-top: 16px;">
+            <h3>&#128274; Access Methods</h3>
+            <div class="grid-3">
+              <div class="drive-item"><span class="drive-icon">&#128190;</span><div><h4>Warp Drive</h4><p>Manage rules visually</p></div></div>
+              <div class="drive-item"><span class="drive-icon">&#128269;</span><div><h4>Command Palette</h4><p><kbd>Ctrl</kbd><kbd>Shift</kbd><kbd>P</kbd> &gt; Rules</p></div></div>
+              <div class="drive-item"><span class="drive-icon">&#9881;</span><div><h4>Settings</h4><p>Settings &gt; AI &gt; Rules</p></div></div>
+            </div>
+          </div>
+
+          <div class="card" style="margin-top: 16px;">
+            <h3>&#128640; /init Command</h3>
+            <p>Quickly set up project rules for a new or existing project:</p>
+            <div class="code-block"># Run in project root:
+/init
+
+# This will:
+# 1. Detect existing rule files (CLAUDE.md, .cursorrules, GEMINI.md, etc.)
+# 2. Link them as sources of truth
+# 3. Create AGENTS.md if it doesn't exist
+# 4. Set up directory structure for skills</div>
+            <div class="info-box success"><strong>Auto-detection:</strong> Warp automatically recognizes and links existing rule files from other AI tools: <code>CLAUDE.md</code>, <code>.cursorrules</code>, <code>GEMINI.md</code>, <code>.windsurfrules</code>, etc.</div>
+          </div>
+        </div>
+      </section>
+
+      <!-- 10. ACCURACY CHECKLIST -->
+      <section class="section" id="accuracy">
+        <div class="section-header">
+          <div class="section-icon">&#9989;</div>
+          <h2>Accuracy Checklist</h2>
+          <button class="collapse-btn" onclick="toggleSection(this)">&#9660;</button>
+        </div>
+        <div class="section-body">
+          <div class="card">
+            <p>Before every agent interaction, verify these 6 items for maximum accuracy:</p>
+            <ul class="checklist">
+              <li><span class="check-icon">&#10003;</span><div><strong>Codebase is indexed</strong> &mdash; Verify indexing is complete and up-to-date in Settings &gt; AI &gt; Codebase Indexing.</div></li>
+              <li><span class="check-icon">&#10003;</span><div><strong>AGENTS.md exists</strong> &mdash; Project root has an <code>AGENTS.md</code> file with architecture, commands, and standards.</div></li>
+              <li><span class="check-icon">&#10003;</span><div><strong>Correct model selected</strong> &mdash; Model matches task complexity (Sonnet for daily, Opus for complex, Haiku for quick).</div></li>
+              <li><span class="check-icon">&#10003;</span><div><strong>Right profile active</strong> &mdash; Profile matches environment (Safe for prod, Balanced for dev, YOLO for sandbox).</div></li>
+              <li><span class="check-icon">&#10003;</span><div><strong>Relevant context attached</strong> &mdash; Files, blocks, or symbols referenced with <code>@file</code>, <code>@symbol</code>, or block navigation.</div></li>
+              <li><span class="check-icon">&#10003;</span><div><strong>Permissions configured</strong> &mdash; Command allowlist/denylist appropriate for the current task and environment.</div></li>
+            </ul>
+          </div>
+        </div>
+      </section>
+
+      <!-- 11. EFFICIENCY PATTERNS -->
+      <section class="section" id="patterns">
+        <div class="section-header">
+          <div class="section-icon">&#128260;</div>
+          <h2>Efficiency Patterns</h2>
+          <button class="collapse-btn" onclick="toggleSection(this)">&#9660;</button>
+        </div>
+        <div class="section-body">
+          <div class="grid-2">
+            <div class="pattern-card">
+              <h4>&#128300; Debug &rarr; Fix &rarr; Verify Loop</h4>
+              <p>The fundamental debugging workflow for agent-driven development:</p>
+              <ol class="step-list">
+                <li><div><strong>Debug:</strong> Describe the bug. Agent analyzes error output, stack traces, and relevant code.</div></li>
+                <li><div><strong>Fix:</strong> Agent proposes and applies a fix. Review the diff in the code review panel.</div></li>
+                <li><div><strong>Verify:</strong> Run tests or reproduction steps. If still broken, loop back to Debug with new context.</div></li>
+              </ol>
+              <div class="info-box"><strong>Key:</strong> Always include error output as context. Use block attachment to show the failing command output.</div>
+            </div>
+            <div class="pattern-card">
+              <h4>&#127793; Feature Development</h4>
+              <p>Structured approach to building new features with the agent:</p>
+              <ol class="step-list">
+                <li><div><strong>Plan:</strong> Use <span class="slash-cmd">/plan</span> to create a step-by-step feature plan.</div></li>
+                <li><div><strong>Implement:</strong> Agent works through plan steps, creating files and modifying code.</div></li>
+                <li><div><strong>Review:</strong> Use code review panel to inspect all changes.</div></li>
+                <li><div><strong>Test:</strong> Agent runs tests and fixes any failures.</div></li>
+              </ol>
+            </div>
+            <div class="pattern-card">
+              <h4>&#128260; Refactoring Pattern</h4>
+              <p>Safe refactoring with agent assistance:</p>
+              <ol class="step-list">
+                <li><div><strong>Scope:</strong> Define what to refactor and why. Attach relevant files.</div></li>
+                <li><div><strong>Plan:</strong> Agent creates a refactoring plan with before/after comparisons.</div></li>
+                <li><div><strong>Execute:</strong> Apply changes incrementally. Verify after each step.</div></li>
+                <li><div><strong>Validate:</strong> Run full test suite. Check for regressions.</div></li>
+              </ol>
+            </div>
+            <div class="pattern-card">
+              <h4>&#128218; Learning a Codebase</h4>
+              <p>Use the agent to understand unfamiliar projects:</p>
+              <ol class="step-list">
+                <li><div><strong>Overview:</strong> Ask the agent to explain the project structure and architecture.</div></li>
+                <li><div><strong>Deep Dive:</strong> Use <code>@symbol</code> to explore specific functions, classes, or modules.</div></li>
+                <li><div><strong>Flow Tracing:</strong> Ask the agent to trace execution paths for specific features.</div></li>
+                <li><div><strong>Document:</strong> Have the agent generate documentation or diagrams.</div></li>
+              </ol>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- 12. WARP DRIVE -->
+      <section class="section" id="drive">
+        <div class="section-header">
+          <div class="section-icon">&#128190;</div>
+          <h2>Warp Drive</h2>
+          <button class="collapse-btn" onclick="toggleSection(this)">&#9660;</button>
+        </div>
+        <div class="section-body">
+          <div class="shortcut" style="margin-bottom: 16px;"><div class="shortcut-keys"><kbd>Ctrl</kbd><span>+</span><kbd>Shift</kbd><span>+</span><kbd>\</kbd></div> <span>Open Warp Drive</span></div>
+
+          <div class="grid-2">
+            <div class="card">
+              <h3>&#128214; Notebooks</h3>
+              <p>Organized collections of commands, notes, and context. Like a runbook for your terminal.</p>
+              <ul class="checklist">
+                <li><span class="check-icon">&#128214;</span><div>Create reusable command sequences</div></li>
+                <li><span class="check-icon">&#128214;</span><div>Add markdown notes alongside commands</div></li>
+                <li><span class="check-icon">&#128214;</span><div>Share notebooks with team members</div></li>
+                <li><span class="check-icon">&#128214;</span><div>Reference with <code>@notebooks</code> or <code>n:</code> filter</div></li>
+              </ul>
+            </div>
+            <div class="card">
+              <h3>&#128257; Workflows</h3>
+              <p>Automated sequences of commands with conditional logic and parameters.</p>
+              <ul class="checklist">
+                <li><span class="check-icon">&#128257;</span><div>Define multi-step command sequences</div></li>
+                <li><span class="check-icon">&#128257;</span><div>Use enum arguments for parameterized workflows</div></li>
+                <li><span class="check-icon">&#128257;</span><div>Chain commands with dependencies</div></li>
+                <li><span class="check-icon">&#128257;</span><div>Reference with <code>@workflows</code> or <code>w:</code> filter</div></li>
+              </ul>
+            </div>
+          </div>
+
+          <div class="grid-2" style="margin-top: 16px;">
+            <div class="card">
+              <h3>&#9889; Prompts</h3>
+              <p>Saved prompt templates for recurring tasks and queries.</p>
+              <ul class="checklist">
+                <li><span class="check-icon">&#9889;</span><div>Create reusable prompt templates</div></li>
+                <li><span class="check-icon">&#9889;</span><div>Parameterize with variables</div></li>
+                <li><span class="check-icon">&#9889;</span><div>Quick access from Command Palette</div></li>
+              </ul>
+            </div>
+            <div class="card">
+              <h3>&#128274; Environment Variables</h3>
+              <p>Managed environment variables for projects and workflows.</p>
+              <ul class="checklist">
+                <li><span class="check-icon">&#128274;</span><div>Store sensitive values securely</div></li>
+                <li><span class="check-icon">&#128274;</span><div>Scope to specific projects</div></li>
+                <li><span class="check-icon">&#128274;</span><div>Inject into workflows automatically</div></li>
+              </ul>
+            </div>
+          </div>
+
+          <div class="card" style="margin-top: 16px;">
+            <h3>&#128260; Workflow Enum Arguments</h3>
+            <p>Define workflows with selectable parameters:</p>
+            <div class="code-block"># Example workflow with enum arguments
+workflow: deploy
+  args:
+    environment:
+      type: enum
+      values: [staging, production]
+      default: staging
+    version:
+      type: string
+      required: true
+
+# Invoke: deploy production v2.1.0</div>
+          </div>
+        </div>
+      </section>
+
+      <!-- 13. MULTI-REPO CONTEXT -->
+      <section class="section" id="multirepo">
+        <div class="section-header">
+          <div class="section-icon">&#127760;</div>
+          <h2>Multi-Repo Context</h2>
+          <button class="collapse-btn" onclick="toggleSection(this)">&#9660;</button>
+        </div>
+        <div class="section-body">
+          <div class="card">
+            <h3>&#127760; Cross-Repo Referencing</h3>
+            <p>Work across multiple repositories in a single agent conversation:</p>
+            <ul class="checklist">
+              <li><span class="check-icon">&#127760;</span><div><strong>Both repos must be indexed</strong> &mdash; Ensure codebase indexing is enabled for all repositories you want to reference.</div></li>
+              <li><span class="check-icon">&#127760;</span><div><strong>Mention repo names explicitly</strong> &mdash; Use the repository name in your prompt so the agent knows which codebase to reference.</div></li>
+              <li><span class="check-icon">&#127760;</span><div><strong>Use @file with repo path</strong> &mdash; Reference files across repos using full paths or repo-qualified paths.</div></li>
+              <li><span class="check-icon">&#127760;</span><div><strong>Combine contexts</strong> &mdash; Attach blocks, files, and symbols from multiple repos in the same conversation.</div></li>
+            </ul>
+            <div class="code-block" style="margin-top: 12px;"># Example multi-repo prompts:
+"In the auth-service repo, how does the login flow work?"
+"Compare the User model in api-gateway with the one in user-service"
+"Update the shared types in common-lib to match the new API in backend"</div>
+            <div class="info-box warning"><strong>Important:</strong> Cross-repo context only works when both repositories have been indexed. Check indexing status in Settings &gt; AI &gt; Codebase Indexing for each repo.</div>
+          </div>
+        </div>
+      </section>
+
+      <!-- FOOTER -->
+      <footer style="text-align: center; padding: 40px 0 20px; border-top: 1px solid var(--border-primary); color: var(--text-muted); font-size: 0.8rem;">
+        <p>Warp Power User Cheatsheet &bull; Agent-Driven Development</p>
+        <p style="margin-top: 4px;">Built with &#128156; for terminal enthusiasts &bull; <a href="https://www.warp.dev" target="_blank">warp.dev</a></p>
+      </footer>
+
+    </main>
+  </div>
+
+  <!-- BACK TO TOP -->
+  <button class="back-to-top" id="backToTop" onclick="window.scrollTo({top:0,behavior:'smooth'})">&#8593;</button>
+
+  <script>
+    // ===== SEARCH =====
+    const searchInput = document.getElementById('searchInput');
+    const sections = document.querySelectorAll('.section');
+    let searchTimeout;
+
+    searchInput.addEventListener('input', function() {
+      clearTimeout(searchTimeout);
+      searchTimeout = setTimeout(() => performSearch(this.value.toLowerCase()), 150);
+    });
+
+    function performSearch(query) {
+      if (!query) {
+        sections.forEach(s => { s.style.display = ''; s.classList.remove('collapsed'); });
+        document.querySelectorAll('.search-highlight').forEach(el => {
+          el.outerHTML = el.textContent;
+        });
+        return;
+      }
+
+      sections.forEach(section => {
+        const text = section.textContent.toLowerCase();
+        if (text.includes(query)) {
+          section.style.display = '';
+          section.classList.remove('collapsed');
+          highlightText(section, query);
+        } else {
+          section.style.display = 'none';
+        }
+      });
+    }
+
+    function highlightText(element, query) {
+      // Remove existing highlights first
+      element.querySelectorAll('.search-highlight').forEach(el => {
+        el.outerHTML = el.textContent;
+      });
+
+      const walker = document.createTreeWalker(element, NodeFilter.SHOW_TEXT, {
+        acceptNode: function(node) {
+          if (node.parentElement.tagName === 'SCRIPT' ||
+              node.parentElement.tagName === 'STYLE' ||
+              node.parentElement.classList.contains('search-highlight')) {
+            return NodeFilter.FILTER_REJECT;
+          }
+          return node.textContent.toLowerCase().includes(query)
+            ? NodeFilter.FILTER_ACCEPT
+            : NodeFilter.FILTER_REJECT;
+        }
+      });
+
+      const nodes = [];
+      while (walker.nextNode()) nodes.push(walker.currentNode);
+
+      nodes.forEach(textNode => {
+        const regex = new RegExp(`(${escapeRegex(query)})`, 'gi');
+        if (regex.test(textNode.textContent)) {
+          const span = document.createElement('span');
+          span.innerHTML = textNode.textContent.replace(regex, '<mark class="search-highlight">$1</mark>');
+          textNode.parentNode.replaceChild(span, textNode);
+        }
+      });
+    }
+
+    function escapeRegex(string) {
+      return string.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+    }
+
+    // ===== COLLAPSE SECTIONS =====
+    function toggleSection(btn) {
+      const section = btn.closest('.section');
+      section.classList.toggle('collapsed');
+    }
+
+    function expandAll() {
+      sections.forEach(s => s.classList.remove('collapsed'));
+    }
+
+    // ===== SIDEBAR =====
+    function toggleSidebar() {
+      document.getElementById('sidebar').classList.toggle('open');
+    }
+
+    // ===== ACTIVE SIDEBAR LINK =====
+    const sidebarLinks = document.querySelectorAll('.sidebar-link');
+    const observerOptions = { rootMargin: '-20% 0px -60% 0px' };
+
+    const observer = new IntersectionObserver((entries) => {
+      entries.forEach(entry => {
+        if (entry.isIntersecting) {
+          sidebarLinks.forEach(link => link.classList.remove('active'));
+          const activeLink = document.querySelector(`.sidebar-link[href="#${entry.target.id}"]`);
+          if (activeLink) activeLink.classList.add('active');
+        }
+      });
+    }, observerOptions);
+
+    sections.forEach(section => observer.observe(section));
+
+    // ===== BACK TO TOP =====
+    const backToTop = document.getElementById('backToTop');
+    window.addEventListener('scroll', () => {
+      backToTop.classList.toggle('visible', window.scrollY > 400);
+    });
+
+    // ===== KEYBOARD SHORTCUT FOR SEARCH =====
+    document.addEventListener('keydown', (e) => {
+      if ((e.ctrlKey && e.shiftKey && e.key === 'F') || (e.key === '/' && !e.ctrlKey && !e.metaKey && document.activeElement.tagName !== 'INPUT')) {
+        e.preventDefault();
+        searchInput.focus();
+        searchInput.select();
+      }
+      if (e.key === 'Escape') {
+        searchInput.blur();
+        searchInput.value = '';
+        performSearch('');
+      }
+    });
+
+    // ===== COPY CODE BLOCKS =====
+    document.querySelectorAll('.code-block').forEach(block => {
+      const btn = document.createElement('button');
+      btn.className = 'copy-btn';
+      btn.textContent = 'Copy';
+      btn.addEventListener('click', () => {
+        const text = block.textContent.replace('Copy', '').trim();
+        navigator.clipboard.writeText(text).then(() => {
+          btn.textContent = 'Copied!';
+          setTimeout(() => btn.textContent = 'Copy', 2000);
+        });
+      });
+      block.appendChild(btn);
+    });
+
+    // ===== CLOSE SIDEBAR ON LINK CLICK (mobile) =====
+    sidebarLinks.forEach(link => {
+      link.addEventListener('click', () => {
+        if (window.innerWidth <= 768) {
+          document.getElementById('sidebar').classList.remove('open');
+        }
+      });
+    });
+  </script>
+</body>
+</html>
